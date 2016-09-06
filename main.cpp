@@ -8,6 +8,7 @@ using namespace std;
 void gauss(double *matrix,double *B,int N);
 
 
+
 int main()
 {
 	int N=4;
