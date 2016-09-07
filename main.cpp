@@ -11,26 +11,40 @@ int newton();
 int SQP();
 
 //準ニュートン法
-int newton2()
+int main()
 {
 	int N=2;
 	double fx=0;
 	double *d=new double [N];
 	double *dfx=new double [N];
 	double *B=new double[N*N];
-	double x0=0, x1=0;
-
+	double x0=0, x1=1;
 
 	double x0l=0, x1l=0;
+
+	double alpha=1;
 
 	int count=0;
 	double E=1;
 	double ep=0;
 
+	//初期化
+	d[0]=0;
+	d[1]=0;
+	dfx[0]=0;
+	dfx[1]=0;
+	B[0*N+0]=1;
+	B[0*N+1]=0;
+	B[1*N+0]=0;
+	B[1*N+1]=1;
+
+
 	while(E>ep)
 	{
 		count++;
+
 		fx=(x0-1)*(x0-1)+10*(x0*x0-x1)*(x0*x0-x1);
+		cout<<"fx="<<fx<<endl;
 
 		double dfxl[2]={dfx[0], dfx[1]};
 
@@ -38,39 +52,59 @@ int newton2()
 		dfx[1]=-20*(x0*x0-x1);
 
 		E=sqrt(dfx[0]*dfx[0]+dfx[1]*dfx[1]);
+		cout<<"E"<<count-1<<"="<<E<<endl;
 		if(E<ep)	break;
-
-		d[0]=-1*dfx[0];
-		d[1]=-1*dfx[1];
-		
 
 
 		double s[2]={x0-x0l, x1-x1l};
 		double y[2]={dfx[0]-dfxl[0], dfx[1]-dfxl[1]};
 
 		double beta=y[0]*s[0]+y[1]*s[1];
-		double sigma=s[0]*(B[0*N+0]+B[1*N+0])*s[0]+s[1]*(B[0*N+1]+B[1*N+1])*s[1];
+		cout<<"beta"<<beta<<endl;
+		if(beta>0)
+		{
+			double sigma=(s[0]*B[0]+s[1]*B[2])*s[0]+(s[0]*B[2]+s[1]*B[3])*s[1];
 
-		double bs[2]={B[0*N+0]*s[0]+B[0*N+1]*s[1], B[1*N+0]*s[0]+B[1*N+1]*s[1]};
-		double bss[4]={bs[0]*s[0],bs[0]*s[1],bs[1]*s[0],bs[1]*s[1]};
+			double bs[2]={B[0*N+0]*s[0]+B[0*N+1]*s[1], B[1*N+0]*s[0]+B[1*N+1]*s[1]};
+			double bss[4]={bs[0]*s[0],bs[0]*s[1],bs[1]*s[0],bs[1]*s[1]};
 
-		B[0*N+0]+=1/beta*y[0]*y[0]-1/sigma*(bss[0*N+0]*B[0*N+0]+bss[0*N+1]*B[1*N+0]);
-		B[0*N+1]+=1/beta*y[0]*y[1]-1/sigma*(bss[0*N+0]*B[0*N+1]+bss[0*N+1]*B[1*N+1]);
-		B[1*N+0]+=1/beta*y[1]*y[0]-1/sigma*(bss[1*N+0]*B[0*N+0]+bss[1*N+1]*B[1*N+0]);
-		B[1*N+1]+=1/beta*y[1]*y[1]-1/sigma*(bss[1*N+0]*B[0*N+1]+bss[1*N+1]*B[1*N+1]);
+			B[0*N+0]+=1/beta*y[0]*y[0]-1/sigma*(bss[0*N+0]*B[0*N+0]+bss[0*N+1]*B[1*N+0]);
+			B[0*N+1]+=1/beta*y[0]*y[1]-1/sigma*(bss[0*N+0]*B[0*N+1]+bss[0*N+1]*B[1*N+1]);
+			B[1*N+0]+=1/beta*y[1]*y[0]-1/sigma*(bss[1*N+0]*B[0*N+0]+bss[1*N+1]*B[1*N+0]);
+			B[1*N+1]+=1/beta*y[1]*y[1]-1/sigma*(bss[1*N+0]*B[0*N+1]+bss[1*N+1]*B[1*N+1]);
+		}
 
 		gauss(B,dfx,N);
 
-		x0+=-1*dfx[0];
-		x1+=-1*dfx[1];
-		E=sqrt(dfx[0]*dfx[0]+dfx[1]*dfx[1]);
+		d[0]=-1*dfx[0];
+		d[1]=-1*dfx[1];
 
-		cout<<"k="<<count-1<<", E="<<E<<endl;
-		cout<<"fx="<<fx<<endl;
+		int Na=100;
+		double fxa_min=fx;
+		double alpha_min=alpha;
+		for(int i=0;i<Na;i++)
+		{
+			double a=(i+1)*alpha/Na;
+			double x0a=x0+a*d[0];
+			double x1a=x0+a*d[1];
+			double fxa=(x0a-1)*(x0a-1)+10*(x0a*x0a-x1a)*(x0a*x0a-x1a);
+			if(fxa<fxa_min)
+			{
+				fxa_min=fxa;
+				alpha_min=a;
+			}
+		}
+		x0l=x0;
+		x1l=x1;
+
+		x0+=alpha_min*d[0];
+		x1+=alpha_min*d[1];
+		cout<<"alpha="<<alpha_min<<endl;
 		cout<<"x0="<<x0<<", x1="<<x1<<endl;
+
 		cout<<endl;
+
 	}
-	cout<<"x0="<<x0<<", x1="<<x1<<endl;
 
 	delete[]	d;
 	delete[]	dfx;
