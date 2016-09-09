@@ -14,46 +14,76 @@ int SQP();
 int main()
 {
 	int N=2;
-	double fx=0;
-	double *d=new double [N];
-	double *dfx=new double [N];
-	double *B=new double[N*N];
-	double x0=0, x1=1;
 
-	double x0l=0, x1l=0;
+	//x_kとB_kの初期設定
+	double x0_k=0, x1_k=1;
 
-	double alpha=1;
+	double *B_k=new double[N*N];
+	B_k[0*N+0]=1;
+	B_k[0*N+1]=0;
+	B_k[1*N+0]=0;
+	B_k[1*N+1]=1;
 
-	int count=0;
+
+	//df_kの初期設定
+	double *df_k=new double [N];
+	df_k[0]=2*(x0_k-1)+20*(x0_k*x0_k-x1_k)*2*x0_k;
+	df_k[1]=-20*(x0_k*x0_k-x1_k);
+
 	double E=1;
 	double ep=0;
 
-	//初期化
-	d[0]=0;
-	d[1]=0;
-	dfx[0]=0;
-	dfx[1]=0;
-	B[0*N+0]=1;
-	B[0*N+1]=0;
-	B[1*N+0]=0;
-	B[1*N+1]=1;
+	
+	////df_k=0なら計算終了
+	E=sqrt(df_k[0]*df_k[0]+df_k[1]*df_k[1]);
+	if(E<ep)	return 0;
 
+
+
+	////df_k>0なら反復計算
+	int count=0;
+
+	//dの初期設定
+	double *d_k=new double [N];	
+	d_k[0]=0;
+	d_k[1]=0;
 
 	while(E>ep)
 	{
 		count++;
+		
+		//dの更新
+		gauss(B_k,df_k,N);
+		d_k[0]=-1*df_k[0];
+		d_k[1]=-1*df_k[1];
 
-		fx=(x0-1)*(x0-1)+10*(x0*x0-x1)*(x0*x0-x1);
-		cout<<"fx="<<fx<<endl;
+		//a_kの更新
+		double Es=1;
+		while(Es>ep)
+		{
+			double s=0.5;
+			double f_k=(x0_k-1)*(x0_k-1)+10*(x0_k*x0_k-x1_k)*(x0_k*x0_k-x1_k);
+			double f_kd=(x0_k+d_k[0]-1)*(x0_k+d_k[0]-1)+10*(x0_k+d_k[0]*x0_k+d_k[0]-x1_k+d_k[1])*(x0_k+d_k[0]*x0_k+d_k[0]-x1_k+d_k[1]);
+			double f_k_s=(1-s)*f_k+f_kd;
 
-		double dfxl[2]={dfx[0], dfx[1]};
+			double f_sk=((x0_k+d_k[0]*s)-1)*((x0_k+d_k[0]*s)-1)+10*((x0_k+d_k[0]*s)*(x0_k+d_k[0]*s)-x1_k+d_k[1]*s)*((x0_k+d_k[0]*s)*(x0_k+d_k[0]*s)-(x1_k+d_k[1]*s));
+			Es=f_k_s-f_sk;
+			if(Es<ep)	break;
+			d_k[0]*=s;
+			d_k[1]*=s;
+		}
 
-		dfx[0]=2*(x0-1)+20*(x0*x0-x1)*2*x0;
-		dfx[1]=-20*(x0*x0-x1);
+		//x_kの更新
+		x0_k+=d_k[0];
+		x1_k+=d_k[1];
 
-		E=sqrt(dfx[0]*dfx[0]+dfx[1]*dfx[1]);
-		cout<<"E"<<count-1<<"="<<E<<endl;
-		if(E<ep)	break;
+		//B_kの更新
+
+		//d_f_kの更新
+
+		double dfxl[2]={df_k[0], df_k[1]};
+
+
 
 
 		double s[2]={x0-x0l, x1-x1l};
@@ -74,10 +104,7 @@ int main()
 			B[1*N+1]+=1/beta*y[1]*y[1]-1/sigma*(bss[1*N+0]*B[0*N+1]+bss[1*N+1]*B[1*N+1]);
 		}
 
-		gauss(B,dfx,N);
 
-		d[0]=-1*dfx[0];
-		d[1]=-1*dfx[1];
 
 		int Na=100;
 		double fxa_min=fx;
@@ -93,7 +120,8 @@ int main()
 				fxa_min=fxa;
 				alpha_min=a;
 			}
-		}
+		}//*/
+
 		x0l=x0;
 		x1l=x1;
 
