@@ -41,48 +41,52 @@ int main()
 	double f=(x[0]-1)*(x[0]-1)+10*(x[0]*x[0]-x[1])*(x[0]*x[0]-x[1]);
 
 	//df_k‚Ì‰Šúİ’è
-	df[0]=2*(x[0]-1)+20*(x0*x0-x1)*2*x0;
-	df[1]=-20*(x0*x0-x1);
+	df[0]=2*(x[0]-1)+20*(x[0]*x[0]-x[1])*2*x[0];
+	df[1]=-20*(x[0]*x[0]-x[1]);
 
 	double E=1;
 	double ep=0;
 	
 	////df_k=0‚È‚çŒvZI—¹
-	E=sqrt(df_k[0]*df_k[0]+df_k[1]*df_k[1]);
+	E=sqrt(df[0]*df[0]+df[1]*df[1]);
+	cout<<"E0="<<E<<endl;
 	if(E<ep)	return 0;
+
 	else
 	{
-		double x0_k=0;
-		double x1_k=1;
-		double f_kt=0;
-		////df_k>0‚È‚ç”½•œŒvZ
 		int count=0;
 		while(E>ep)
 		{
 			count++;
 
-			Nr[0]=df_k[0];
-			Nr[1]=df_k[1];
-			gauss(B_k, Nr,N);
-			d_k[0]=Nr[0];
-			d_k[1]=Nr[1];
-			cout<<"d"<<count<<"="<<d_k[0]<<", "<<d_k[1]<<endl;
+			
+			double x_k[2]={x[0], x[1]};
+			double df_k[2]={df[0],df[1]};
 
-			double f_k_min=f_k;
-			double al_min=0;
+			Nr[0]=df[0];
+			Nr[1]=df[1];
+			gauss(B, Nr,N);
+			d[0]=Nr[0];
+			d[1]=Nr[1];
+
+			cout<<"d"<<count<<"="<<d[0]<<", "<<d[1]<<endl;
+
+			double f_min=f;
+			double a_min=0;
 
 			for(int i=0;i<100000;i++)
 			{
 				double alpha=(i+1)*1e-5;
-				double x0t=x0_k+d_k[0]*alpha;
-				double x1t=x1_k+d_k[1]*alpha;
-				f_kt=(x0t-1)*(x0t-1)+10*(x0t*x0t-x1t)*(x0t*x0t-x1t);
-				if(f_kt<f_k)
+				double x0_a=x_k[0]+d[0]*alpha;
+				double x1_a=x_k[1]+d[1]*alpha;
+				double f_a=(x0_a-1)*(x0_a-1)+10*(x0_a*x0_a-x1_a)*(x0_a*x0_a-x1_a);
+				if(f_a<f_min)
 				{
-					f_k_min=f_kt;
-					al_min=alpha;
+					f_min=f_a;
+					a_min=alpha;
 				}
 			}
+			cout<<"f"<<count<<"="<<f_min<<", alpha="<<a_min<<endl;
 
 			double d0=d_k[0]*al_min;
 			double d1=d_k[1]*al_min;
