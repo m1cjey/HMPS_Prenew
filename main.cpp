@@ -8,12 +8,16 @@ using namespace std;
 void gauss(double *matrix,double *B,int N);
 int newton();
 int q_newton();
+<<<<<<< HEAD
 int SQP_method();
 int SUMT_IPM();
+=======
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 int main()
 {
 	int Nx=4;
+<<<<<<< HEAD
 	double *x=new double [Nx];
 	double *old_x=new double [Nx];
 	x[0]=5;
@@ -832,6 +836,8 @@ int SQP_method()
 
 	/*
 	int Nx=4;
+=======
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	int Nv=3;
 
 	double *x=new double [Nx];
@@ -850,6 +856,7 @@ int SQP_method()
 	double *B=new double [Nx*Nx];
 	double *Nr=new double [Nx];
 		
+<<<<<<< HEAD
 	double p=10.0;
 	double Fp=0;
 	double *dFp=new double[Nx];		
@@ -860,6 +867,15 @@ int SQP_method()
 	int *Nv_n=new int [Nv];
 	double *Nrv=new double [Nv];
 	double *Nlv=new double [Nv*Nv];
+=======
+	double Fp=0;
+	double p=10.0;
+	double *dFp=new double[Nx];		
+
+	double *v=new double [Nv];
+	int *Nv_n=new int [Nv];
+
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 	//初期化
 	x[0]=10;
@@ -890,6 +906,7 @@ int SQP_method()
 	{
 		v[i]=0;
 		Nv_n[i]=0;
+<<<<<<< HEAD
 		Nrv[i]=0;
 		for(int j=0;j<Nv;j++)	Nlv[i*Nv+j]=0;
 	}
@@ -899,16 +916,27 @@ int SQP_method()
 	dfx[0]=2*x[0]-5;	dfx[1]=2*x[1]-5;	dfx[2]=4*x[2]-21;	dfx[3]=2*x[3]+7;
 
 	//c関係　計算
+=======
+	}
+
+	fx=x[0]*x[0] + x[1]*x[1] + 2*x[2]*x[2] + x[3]*x[3] -5*x[0] -5*x[1] -21*x[2] + 7*x[3];
+	dfx[0]=2*x[0]-5;	dfx[1]=2*x[1]-5;	dfx[2]=4*x[2]-21;	dfx[3]=2*x[3]+7;
+
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	c0=x[0]*x[0] +	x[1]*x[1] + x[2]*x[2] + x[3]*x[3] + x[0] -x[1] + x[2] -x[3] -8;
 	c1=x[0]*x[0] +	2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
 	c2=2*x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + 2*x[0] -x[1] -x[3] -5;	
 	dc0[0]=2*x[0]+1;	dc0[1]=2*x[1]-1;	dc0[2]=2*x[2]+1;	dc0[3]=2*x[3]-1;
 	dc1[0]=2*x[0]-1;	dc1[1]=4*x[1];		dc1[2]=2*x[2];		dc1[3]=4*x[3]-1;
 	dc2[0]=4*x[0]+2;	dc2[1]=2*x[1]-1;	dc2[2]=2*x[2];		dc2[3]=-1;
+<<<<<<< HEAD
 	
 	for(int i=0;i<Nx;i++)	dL[i]=dfx[i]+v[0]*dc0[i]+v[1]*dc1[i]+v[2]*dc2[i];
 
 	//Fp　計算
+=======
+
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	Fp=fx;
 	for(int i=0;i<Nx;i++)	dFp[i]+=dfx[i];
 	if(c0>0)
@@ -939,6 +967,7 @@ int SQP_method()
 		for(int i=0;i<Nx;i++)	if(dc2[i]>0)	dFp[i]+=dc2[i]*p;
 	}
 
+<<<<<<< HEAD
 	double E=1;
 	double ep=1e-10;
 
@@ -955,6 +984,13 @@ int SQP_method()
 	fc0=c0+(dc0[0]*d[0]+dc0[1]*d[1]+dc0[2]*d[2]+dc0[3]*d[3]);
 	fc1=c1+(dc1[0]*d[0]+dc1[1]*d[1]+dc1[2]*d[2]+dc1[3]*d[3]);
 	fc2=c2+(dc2[0]*d[0]+dc2[1]*d[1]+dc2[2]*d[2]+dc2[3]*d[3]);
+=======
+	//v0　計算
+	int nv=0;
+	double fc0=c0+(dc0[0]*d[0]+dc0[1]*d[1]+dc0[2]*d[2]+dc0[3]*d[3]);
+	double fc1=c1+(dc1[0]*d[0]+dc1[1]*d[1]+dc1[2]*d[2]+dc1[3]*d[3]);
+	double fc2=c2+(dc2[0]*d[0]+dc2[1]*d[1]+dc2[2]*d[2]+dc2[3]*d[3]);
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	if(fc0!=0)	v[0]=0;
 	else
 	{
@@ -975,11 +1011,17 @@ int SQP_method()
 	}
 	if(nv>1)
 	{
+<<<<<<< HEAD
+=======
+		double *Nr=new double [nv];
+		double *Nl=new double [nv*nv];
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 		for(int i=0;i<nv;i++)
 		{
 			for(int j=0;j<nv;j++)
 			{
 				int jv=Nv_n[j];
+<<<<<<< HEAD
 				if(jv==0)	Nlv[i*nv+j]=dc0[j];
 				else if(jv==1)	Nlv[i*nv+j]=dc1[j];
 				else if(jv==2)	Nlv[i*nv+j]=dc2[j];
@@ -993,11 +1035,27 @@ int SQP_method()
 			if(iv==0)	v[0]=Nrv[i];
 			else if(iv==1)	v[1]=Nrv[i];
 			else if(iv==2)	v[2]=Nrv[i];
+=======
+				if(jv==0)	Nl[i*nv+j]=dc0[j];
+				else if(jv==1)	Nl[i*nv+j]=dc1[j];
+				else if(jv==2)	Nl[i*nv+j]=dc2[j];
+			}
+			Nr[i]=-1*(dfx[i]+B[i*Nx+0]*d[0]+B[i*Nx+1]*d[1]+B[i*Nx+2]*d[2]+B[i*Nx+3]*d[3]);
+		}
+		gauss(Nl,Nr,nv);
+		for(int i=0;i<nv;i++)
+		{
+			int iv=Nv_n[i];
+			if(iv==0)	v[0]=Nr[i];
+			else if(iv==1)	v[1]=Nr[i];
+			else if(iv==2)	v[2]=Nr[i];
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 		}
 	}
 	else if(nv==1)
 	{
 		int iv=Nv_n[nv-1];
+<<<<<<< HEAD
 		if(iv==0)	v[0]=-1/( dc0[0]+dc0[1]+dc0[2]+dc0[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
 		else if(iv==1)	v[1]=-1/( dc1[0]+dc1[1]+dc1[2]+dc1[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
 		else if(iv==2)	v[2]=-1/( dc2[0]+dc2[1]+dc2[2]+dc2[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
@@ -1005,6 +1063,18 @@ int SQP_method()
 
 	E=sqrt(d[0]*d[0]+d[1]*d[1]+d[2]*d[2]+d[3]*d[3]);
 	//E=sqrt(dFp[0]*dFp[0]+dFp[1]*dFp[1]+dFp[2]*dFp[2]+dFp[3]*dFp[3]);
+=======
+		if(iv==0)	v[0]=-1/(dc0[0]+dc0[1]+dc0[2]+dc0[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
+		else if(iv==1)	v[1]=-1/(dc1[0]+dc1[1]+dc1[2]+dc1[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
+		else if(iv==2)	v[2]=-1/(dc2[0]+dc2[1]+dc2[2]+dc2[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
+	}
+
+	double E=1;
+	double ep=1e-10;
+
+	//E=sqrt(dFp[0]*dFp[0]+dFp[1]*dFp[1]+dFp[2]*dFp[2]+dFp[3]*dFp[3]);
+	E=sqrt(dfx[0]*dfx[0]+dfx[1]*dfx[1]+dfx[2]*dfx[2]+dfx[3]*dfx[3]);
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 	//出力
 	cout<<"x0="<<x[0]<<", "<<x[1]<<", "<<x[2]<<", "<<x[3]<<endl;
@@ -1014,11 +1084,16 @@ int SQP_method()
 	cout<<"Fp0="<<Fp<<endl;
 	//cout<<"dFp0="<<dFp[0]<<", "<<dFp[1]<<", "<<dFp[2]<<", "<<dFp[3]<<endl;
 	cout<<"dfx0="<<dfx[0]<<", "<<dfx[1]<<", "<<dfx[2]<<", "<<dfx[3]<<endl;
+<<<<<<< HEAD
 	cout<<"d0="<<d[0] <<", "<<d[1] <<", "<<d[2] <<", "<<d[3] <<endl;
 	cout<<"d0/answer="<<d[0]/(-15) <<", "<<d[1]/25 <<", "<<d[2]/(-19) <<", "<<d[3]/13 <<endl;
 	//cout<<"fx0="<<fx<<endl;
 	cout<<"E0="<<E<<endl;
 
+=======
+	//cout<<"fx0="<<fx<<endl;
+	cout<<"E0="<<E<<endl<<endl;
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 	if(E<ep)	return 0;
 	else
@@ -1026,6 +1101,7 @@ int SQP_method()
 		int count=0;
 		while(E>ep)
 		{
+<<<<<<< HEAD
 			double x_k[4]={x[0], x[1], x[2], x[3]};
 			double dFp_k[4]={dFp[0], dFp[1], dFp[2], dFp[3]};
 			double dfx_k[4]={dfx[0], dfx[1], dfx[2], dfx[3]};
@@ -1084,12 +1160,58 @@ int SQP_method()
 						//Bに関する出力
 			count++;
  			for(int i=0;i<Nx;i++)	x[i]+=d[i]*a_min;
+=======
+			count++;
+			double x_k[4]={x[0], x[1],x[2],x[3]};
+			double dFp_k[4]={dFp[0],dFp[1],dFp[2],dFp[3]};
+			double dL_k[4]={dfx[0]+v[0]*dc0[0]+v[1]*dc1[0]+v[2]*dc2[0],
+				dfx[1]+v[0]*dc0[1]+v[1]*dc1[1]+v[2]*dc2[1],
+				dfx[2]+v[0]*dc0[2]+v[1]*dc1[2]+v[2]*dc2[2],
+				dfx[3]+v[0]*dc0[3]+v[1]*dc1[3]+v[2]*dc2[3]};
+			
+			Nr[0]=dfx[0];	Nr[1]=dfx[1];	Nr[2]=dfx[2];	Nr[3]=dfx[3];	
+			//Nr[0]=dFp[0];	Nr[1]=dFp[1];	Nr[2]=dFp[2];	Nr[3]=dFp[3];	
+			gauss(B,Nr,Nx);
+			d[0]=-Nr[0];	d[1]=-Nr[1];	d[2]=-Nr[2];	d[3]=-Nr[3];	
+
+			double Fp_min=Fp;
+			double a_min=0;
+			for(int i=0;i<100000;i++)
+			{
+				double alpha=(i+1)*1e-5;
+				
+				double x_a[4]={x[0]+d[0]*alpha, x[1]+d[1]*alpha, x[2]+d[2]*alpha, x[3]+d[3]*alpha};
+			
+				double c0_a=x_a[0]*x_a[0] +	x_a[1]*x_a[1] + x_a[2]*x_a[2] + x_a[3]*x_a[3] + x_a[0] -x_a[1] + x_a[2] -x_a[3] -8;
+				double c1_a=x_a[0]*x_a[0] +	2*x_a[1]*x_a[1] + x_a[2]*x_a[2] + 2*x_a[3]*x_a[3] -x_a[0] -x_a[3] -10;
+				double c2_a=2*x_a[0]*x_a[0] + x_a[1]*x_a[1] + x_a[2]*x_a[2] + 2*x_a[0] -x_a[1] -x_a[3] -5;	
+				
+				double fx_a=x_a[0]*x_a[0] + x_a[1]*x_a[1] + 2*x_a[2]*x_a[2] + x_a[3]*x_a[3] -5*x_a[0] -5*x_a[1] -21*x_a[2] + 7*x_a[3];
+
+				double Fp_a=fx_a;
+				if(c0_a>0)	Fp_a+=c0_a*p;
+				if(c1_a>0)	Fp_a+=c1_a*p;
+				if(c2_a>0)	Fp_a+=c2_a*p;
+
+				if(Fp_a<Fp_min)
+				{
+					Fp_min=Fp_a;
+					a_min=alpha;
+				}
+			}
+
+			for(int i=0;i<Nx;i++)	x[i]+=d[i]*a_min;
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 			fx=x[0]*x[0] + x[1]*x[1] + 2*x[2]*x[2] + x[3]*x[3] -5*x[0] -5*x[1] -21*x[2] + 7*x[3];
 			dfx[0]=2*x[0]-5;	dfx[1]=2*x[1]-5;	dfx[2]=4*x[2]-21;	dfx[3]=2*x[3]+7;
 
 			c0=x[0]*x[0] +	x[1]*x[1] + x[2]*x[2] + x[3]*x[3] + x[0] -x[1] + x[2] -x[3] -8;
+<<<<<<< HEAD
 			c1=x[0]*x[0] + 2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
+=======
+			c1=x[0]*x[0] +	2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 			c2=2*x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + 2*x[0] -x[1] -x[3] -5;
 			dc0[0]=2*x[0]+1;	dc0[1]=2*x[1]-1;	dc0[2]=2*x[2]+1;	dc0[3]=2*x[3]-1;
 			dc1[0]=2*x[0]-1;	dc1[1]=4*x[1];		dc1[2]=2*x[2];		dc1[3]=4*x[3]-1;
@@ -1126,10 +1248,17 @@ int SQP_method()
 			}
 
 			//v0　計算
+<<<<<<< HEAD
 			nv=0;
 			fc0=c0+(dc0[0]*d[0]+dc0[1]*d[1]+dc0[2]*d[2]+dc0[3]*d[3]);
 			fc1=c1+(dc1[0]*d[0]+dc1[1]*d[1]+dc1[2]*d[2]+dc1[3]*d[3]);
 			fc2=c2+(dc2[0]*d[0]+dc2[1]*d[1]+dc2[2]*d[2]+dc2[3]*d[3]);
+=======
+			int nv=0;
+			double fc0=c0+(dc0[0]*d[0]+dc0[1]*d[1]+dc0[2]*d[2]+dc0[3]*d[3]);
+			double fc1=c1+(dc1[0]*d[0]+dc1[1]*d[1]+dc1[2]*d[2]+dc1[3]*d[3]);
+			double fc2=c2+(dc2[0]*d[0]+dc2[1]*d[1]+dc2[2]*d[2]+dc2[3]*d[3]);
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 			if(fc0!=0)	v[0]=0;
 			else
 			{
@@ -1150,11 +1279,17 @@ int SQP_method()
 			}
 			if(nv>1)
 			{
+<<<<<<< HEAD
+=======
+				double *Nr=new double [nv];
+				double *Nl=new double [nv*nv];
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 				for(int i=0;i<nv;i++)
 				{
 					for(int j=0;j<nv;j++)
 					{
 						int jv=Nv_n[j];
+<<<<<<< HEAD
 						if(jv==0)	Nlv[i*nv+j]=dc0[j];
 						else if(jv==1)	Nlv[i*nv+j]=dc1[j];
 						else if(jv==2)	Nlv[i*nv+j]=dc2[j];
@@ -1168,6 +1303,21 @@ int SQP_method()
 					if(iv==0)	v[0]=Nrv[i];
 					else if(iv==1)	v[1]=Nrv[i];
 					else if(iv==2)	v[2]=Nrv[i];
+=======
+						if(jv==0)	Nl[i*nv+j]=dc0[j];
+						else if(jv==1)	Nl[i*nv+j]=dc1[j];
+						else if(jv==2)	Nl[i*nv+j]=dc2[j];
+					}
+					Nr[i]=-1*(dfx[i]+B[i*Nx+0]*d[0]+B[i*Nx+1]*d[1]+B[i*Nx+2]*d[2]+B[i*Nx+3]*d[3]);
+				}
+				gauss(Nl,Nr,nv);
+				for(int i=0;i<nv;i++)
+				{
+					int iv=Nv_n[i];
+					if(iv==0)	v[0]=Nr[i];
+					else if(iv==1)	v[1]=Nr[i];
+					else if(iv==2)	v[2]=Nr[i];
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 				}
 			}
 			else if(nv==1)
@@ -1179,6 +1329,7 @@ int SQP_method()
 			}
 
 			//E=sqrt(dFp[0]*dFp[0]+dFp[1]*dFp[1]+dFp[2]*dFp[2]+dFp[3]*dFp[3]);
+<<<<<<< HEAD
 			E=sqrt(d[0]*d[0]+d[1]*d[1]+d[2]*d[2]+d[3]*d[3]);
 			
 			//出力
@@ -1197,6 +1348,23 @@ int SQP_method()
 				dfx_k[1]+v[0]*dc0_k[1]+v[1]*dc1_k[1]+v[2]*dc2_k[1],
 				dfx_k[2]+v[0]*dc0_k[2]+v[1]*dc1_k[2]+v[2]*dc2_k[2],
 				dfx_k[3]+v[0]*dc0_k[3]+v[1]*dc1_k[3]+v[2]*dc2_k[3]};
+=======
+			E=sqrt(dfx[0]*dfx[0]+dfx[1]*dfx[1]+dfx[2]*dfx[2]+dfx[3]*dfx[3]);
+			
+			//出力
+			cout<<"x"<<count<<"="<<x[0]<<", "<<x[1]<<", "<<x[2]<<", "<<x[3]<<endl;
+			cout<<"fc"<<count<<"="<<fc0<<", "<<fc1<<", "<<fc2<<endl;
+			cout<<"v"<<count<<"="<<v[0]<<", "<<v[1]<<", "<<v[2]<<endl;
+			cout<<"Fp"<<count<<"="<<Fp_min<<", alpha="<<a_min<<endl;
+			//cout<<"fx"<<count<<"="<<f<<endl;
+			cout<<"d"<<count<<"="<<d[0] <<", "<<d[1] <<", "<<d[2] <<", "<<d[3] <<endl;
+			cout<<"da"<<count<<"="<<d[0]*a_min<<", "<<d[1]*a_min<<", "<<d[2]*a_min<<", "<<d[3]*a_min<<endl;
+			cout<<"E"<<count<<"="<<E<<endl;
+			cout<<endl;
+			if(E<ep)	break;
+
+			for(int i=0;i<Nx;i++)	dL[i]=dfx[i]+v[0]*dc0[i]+v[1]*dc1[i]+v[2]*dc2[i];
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 			double s[4]={x[0]-x_k[0],x[1]-x_k[1], x[2]-x_k[2], x[3]-x_k[3]};
 			//double y[4]={dFp[0]-dFp_k[0], dFp[1]-dFp_k[1], dFp[2]-dFp_k[2], dFp[3]-dFp_k[3]};
@@ -1204,6 +1372,7 @@ int SQP_method()
 
 			double beta=y[0]*s[0]+y[1]*s[1]+y[2]*s[2]+y[3]*s[3];
 
+<<<<<<< HEAD
 			double sigma=(s[0]*B[0*Nx+0]+s[1]*B[1*Nx+0]+s[2]*B[2*Nx+0]+s[3]*B[3*Nx+0])*s[0]
 			+(s[0]*B[0*Nx+1]+s[1]*B[1*Nx+1]+s[2]*B[2*Nx+1]+s[3]*B[3*Nx+1])*s[1]
 			+(s[0]*B[0*Nx+2]+s[1]*B[1*Nx+2]+s[2]*B[2*Nx+2]+s[3]*B[3*Nx+2])*s[2]
@@ -1212,6 +1381,17 @@ int SQP_method()
 			double seta=1.0;
 			if(beta>0)
 			{
+=======
+			if(beta>0)
+			{
+
+				double sigma=(s[0]*B[0*Nx+0]+s[1]*B[1*Nx+0]+s[2]*B[2*Nx+0]+s[3]*B[3*Nx+0])*s[0]
+				+(s[0]*B[0*Nx+1]+s[1]*B[1*Nx+1]+s[2]*B[2*Nx+1]+s[3]*B[3*Nx+1])*s[1]
+				+(s[0]*B[0*Nx+2]+s[1]*B[1*Nx+2]+s[2]*B[2*Nx+2]+s[3]*B[3*Nx+2])*s[2]
+				+(s[0]*B[0*Nx+3]+s[1]*B[1*Nx+3]+s[2]*B[2*Nx+3]+s[3]*B[3*Nx+3])*s[3];
+				
+				double seta=1.0;
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 				if(beta<0.2*sigma)
 				{
 					seta=0.8*sigma/(sigma-beta);
@@ -1255,6 +1435,7 @@ int SQP_method()
 				B[3*Nx+1]+=1/beta*y[3]*y[1]-1/sigma*(bss[3*Nx+0]*B[0*Nx+1]+bss[3*Nx+1]*B[1*Nx+1]+bss[3*Nx+2]*B[2*Nx+1]+bss[3*Nx+3]*B[3*Nx+1]);
 				B[3*Nx+2]+=1/beta*y[3]*y[2]-1/sigma*(bss[3*Nx+0]*B[0*Nx+2]+bss[3*Nx+1]*B[1*Nx+2]+bss[3*Nx+2]*B[2*Nx+2]+bss[3*Nx+3]*B[3*Nx+2]);
 				B[3*Nx+3]+=1/beta*y[3]*y[3]-1/sigma*(bss[3*Nx+0]*B[0*Nx+3]+bss[3*Nx+1]*B[1*Nx+3]+bss[3*Nx+2]*B[2*Nx+3]+bss[3*Nx+3]*B[3*Nx+3]);
+<<<<<<< HEAD
 			}			
 			cout<<"beta"<<count<<"="<<beta<<endl;
 
@@ -1272,6 +1453,15 @@ int SQP_method()
 
 	*/
 
+=======
+			}
+			//Bに関する出力
+			cout<<"beta"<<count<<"="<<beta<<endl;
+			//*/
+		}
+	}
+
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	delete[]	x;
 	delete[]	dfx;
 	delete[]	dc0;
@@ -1283,8 +1473,12 @@ int SQP_method()
 	delete[]	dFp;
 	delete[]	v;
 	delete[]	Nv_n;
+<<<<<<< HEAD
 	delete[]	Nrv;
 	delete[]	Nlv;
+=======
+
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	return 0;
 }
 
@@ -1417,6 +1611,11 @@ int q_newton()
 }
 
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 int newton()
 {
 	int N=2;
