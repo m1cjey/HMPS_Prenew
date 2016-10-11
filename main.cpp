@@ -4,25 +4,322 @@ using namespace std;
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
+#define DIMENSION 3
+#define A_X 0
+#define A_Y 1
+#define A_Z 2
+#define G 9.8
 
 void gauss(double *matrix,double *B,int N);
 int newton();
 int q_newton();
-<<<<<<< HEAD
 int SQP_method();
 int SUMT_IPM();
-=======
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
+int MM_method();
+int MM_method2();
 
-int main()
+int main()	
 {
-	int Nx=4;
-<<<<<<< HEAD
+	////例題		システム工学第2版　森北出版（株）　演習問題5の4	p.197
+	int Nx=2;
 	double *x=new double [Nx];
 	double *old_x=new double [Nx];
-	x[0]=5;
-	x[1]=4;
-	x[2]=1;
+	x[0]=10;
+	x[1]=-10;
+
+
+	double c0=0;
+	double fx=0;
+	double Txr=0;
+
+
+	double *dfx=new double [Nx];
+	double *dc0=new double [Nx];
+	double *dTxr=new double [Nx];
+
+	double *rfx=new double [Nx*Nx];
+	double *rc0=new double [Nx*Nx];
+	double *rTxr=new double [Nx*Nx];
+
+	for(int i=0;i<Nx;i++)
+	{
+		dfx[i]=0;
+		dc0[i]=0;
+		dTxr[i]=0;
+		for(int j=0;j<Nx;j++)
+		{
+			rfx[i*Nx+j]=0;
+			rc0[i*Nx+j]=0;
+			rTxr[i*Nx+j]=0;
+		}
+	}
+
+
+	double r=1;
+	double ep=1e-10;
+	double seta0=0, seta1=0, seta2=0, seta3=0;
+	double E_min=1;
+	int count_min=0;
+
+	double *B=new double[Nx*Nx];
+	double *d=new double [Nx];	
+	double *Nr=new double [Nx];
+
+
+
+	while(E_min>ep)
+	{
+		count_min++;
+		if(count_min>5000)	break;
+		for(int i=0;i<Nx;i++)
+		{
+			old_x[i]=x[i];
+			d[i]=0;
+			Nr[i]=0;
+			for(int j=0;j<Nx;j++)
+			{
+				if(j==i)	B[i*Nx+j]=1;
+				else
+				{
+					B[i*Nx+j]=0;
+				}
+			}
+		}
+
+
+		double E=1;
+		int count=0;
+		int calc_way=1;	//最適解探索	Newton 0, 準Newton 1
+
+		if(calc_way==0)
+		{
+			while(E>ep)
+			{
+				count++;
+
+				fx=(x[0]-1)*(x[0]-1)+(x[1]-2)*(x[1]-2);
+				dfx[0]=2*(x[0]-1);	dfx[1]=2*(x[1]-2);
+				rfx[0*Nx+0]=2;	rfx[0*Nx+1]=0;	rfx[1*Nx+0]=0;	rfx[1*Nx+1]=2;
+
+				c0=x[0]*x[0]+x[1]*x[1]-1;
+				dc0[0]=2*x[0];	dc0[1]=2*x[1];
+				rc0[0*Nx+0]=2;	rc0[0*Nx+1]=0;	rc0[1*Nx+0]=0;	rc0[1*Nx+1]=2;
+
+				Txr=fx;
+				Txr+=0.5*r*(c0+seta0)*(c0+seta0);
+	
+				//cout<<"Txr="<<Txr<<endl;
+
+				for(int i=0;i<Nx;i++)
+				{
+					dTxr[i]=dfx[i];
+					dTxr[i]+=r*(c0+seta0)*dc0[i];
+				}
+
+				//cout<<"dTxr="<<dTxr[0]<<", "<<dTxr[1]<<", "<<dTxr[2]<<", "<<dTxr[3]<<endl;
+
+				for(int i=0;i<Nx;i++)
+				{
+					for(int j=0;j<Nx;j++)
+					{
+						rTxr[i*Nx+j]=rfx[i*Nx+j];
+						rTxr[i*Nx+j]+=r*dc0[j]*dc0[i]+r*(c0+seta0)*rc0[i*Nx+j];
+					}
+				}
+				//cout<<"rTxr="<<rTxr[0]<<", "<<rTxr[1]<<", "<<rTxr[2]<<", "<<rTxr[3]<<endl;
+				//cout<<rTxr[4]<<", "<<rTxr[5]<<", "<<rTxr[6]<<", "<<rTxr[7]<<endl;
+				//cout<<rTxr[8]<<", "<<rTxr[9]<<", "<<rTxr[10]<<", "<<rTxr[11]<<endl;
+				//cout<<rTxr[12]<<", "<<rTxr[13]<<", "<<rTxr[14]<<", "<<rTxr[15]<<endl;
+
+				gauss(rTxr,dTxr,Nx);
+				//cout<<"dTxr="<<dTxr[0]<<", "<<dTxr[1]<<", "<<dTxr[2]<<", "<<dTxr[3]<<endl;
+				for(int i=0;i<Nx;i++)	x[i]-=dTxr[i];
+
+
+				E=sqrt(dTxr[0]*dTxr[0]+dTxr[1]*dTxr[1]);
+				cout<<"E"<<count<<"="<<E<<endl;
+			}
+		}
+		else if(calc_way==1)
+		{
+	
+			fx=(x[0]-1)*(x[0]-1)+(x[1]-2)*(x[1]-2);
+			dfx[0]=2*(x[0]-1);	dfx[1]=2*(x[1]-2);
+
+			c0=x[0]*x[0]+x[1]*x[1]-1;
+			dc0[0]=2*x[0];	dc0[1]=2*x[1];
+
+			Txr=fx+0.5*r*(c0+seta0)*(c0+seta0);			
+			dTxr[0]=dfx[0]+r*(c0+seta0)*dc0[0];
+			dTxr[1]=dfx[1]+r*(c0+seta0)*dc0[1];
+
+			E=sqrt(dTxr[0]*dTxr[0]+dTxr[1]*dTxr[1]);
+			cout<<"E0="<<E<<endl;
+			if(E<ep)	return 0;
+			while(E>ep)
+			{
+				count++;
+				if(count>500)	break;
+				double x_k[2]={x[0], x[1]};
+				double dTxr_k[2]={dTxr[0],dTxr[1]};
+
+				Nr[0]=dTxr[0];
+				Nr[1]=dTxr[1];
+				gauss(B,Nr,Nx);
+				d[0]=-1*Nr[0];
+				d[1]=-1*Nr[1];
+
+//				cout<<"d"<<count<<"="<<d[0]<<", "<<d[1]<<endl;
+
+				double Txr_min=Txr;
+				double a_min=1e-3;
+
+				for(int i=0;i<1000;i++)
+				{
+					double alpha=(i+1)*1e-3;
+					double x0_a=x[0]+d[0]*alpha;
+					double x1_a=x[1]+d[1]*alpha;
+
+					double Txr_a=(x0_a-1)*(x0_a-1)+(x1_a-2)*(x1_a-2)+0.5*r*(x0_a*x0_a+x1_a*x1_a-1+seta0)*(x0_a*x0_a+x1_a*x1_a-1+seta0);
+
+					if(Txr_a<Txr_min)
+					{
+						Txr_min=Txr_a;
+						a_min=alpha;
+					}
+				}
+//				cout<<"Txr"<<count<<"="<<Txr_min<<", alpha="<<a_min<<endl;
+
+				double d0=d[0]*a_min;
+				double d1=d[1]*a_min;
+				x[0]+=d0;
+				x[1]+=d1;
+
+//				cout<<"x"<<count<<"="<<x[0]<<", "<<x[1]<<endl;
+
+
+				fx=(x[0]-1)*(x[0]-1)+(x[1]-2)*(x[1]-2);
+				dfx[0]=2*(x[0]-1);	dfx[1]=2*(x[1]-2);
+
+				c0=x[0]*x[0]+x[1]*x[1]-1;
+				dc0[0]=2*x[0];	dc0[1]=2*x[1];
+
+				Txr=fx;
+				Txr+=0.5*r*(c0+seta0)*(c0+seta0);
+	
+				//cout<<"Txr="<<Txr<<endl;
+
+				for(int i=0;i<Nx;i++)
+				{
+					dTxr[i]=dfx[i];
+					dTxr[i]+=r*(c0+seta0)*dc0[i];
+				}
+				
+				E=sqrt(dTxr[0]*dTxr[0]+dTxr[1]*dTxr[1]);
+				if(count%100==0)cout<<"E"<<count<<"="<<E<<endl;
+				//cout<<endl;
+
+				if(E<ep)	break;
+
+				double s[2]={x[0]-x_k[0],x[1]-x_k[1]};
+				double y[2]={dTxr[0]-dTxr_k[0],dTxr[1]-dTxr_k[1]};
+
+				double beta=y[0]*s[0]+y[1]*s[1];
+				double sigma=(s[0]*B[0]+s[1]*B[2])*s[0]+(s[0]*B[2]+s[1]*B[3])*s[1];
+
+//				cout<<"beta"<<count<<"="<<beta<<", sigma"<<count<<"="<<sigma<<endl;
+
+				if(beta>0)//(beta>=0.2*sigma)
+				{
+					double bs[2]={B[0*Nx+0]*s[0]+B[0*Nx+1]*s[1], B[1*Nx+0]*s[0]+B[1*Nx+1]*s[1]};
+					double bss[4]={bs[0]*s[0],bs[0]*s[1],bs[1]*s[0],bs[1]*s[1]};
+
+					B[0*Nx+0]+=1/beta*y[0]*y[0]-1/sigma*(bss[0*Nx+0]*B[0*Nx+0]+bss[0*Nx+1]*B[1*Nx+0]);
+					B[0*Nx+1]+=1/beta*y[0]*y[1]-1/sigma*(bss[0*Nx+0]*B[0*Nx+1]+bss[0*Nx+1]*B[1*Nx+1]);
+					B[1*Nx+0]+=1/beta*y[1]*y[0]-1/sigma*(bss[1*Nx+0]*B[0*Nx+0]+bss[1*Nx+1]*B[1*Nx+0]);
+					B[1*Nx+1]+=1/beta*y[1]*y[1]-1/sigma*(bss[1*Nx+0]*B[0*Nx+1]+bss[1*Nx+1]*B[1*Nx+1]);
+				}
+	/*			else if(beta>0)
+				{
+					double seta=0.8*sigma/(sigma-beta);
+					cout<<"seta="<<seta<<endl;
+					double y0_s=y[0]*seta+(1-seta)*(B[0]*s[0]+B[1]*s[1]);
+					double y1_s=y[1]*seta+(1-seta)*(B[2]*s[0]+B[3]*s[1]);
+
+					beta=y0_s*s[0]+y1_s*s[1];
+					double bs[2]={B[0*Nx+0]*s[0]+B[0*Nx+1]*s[1], B[1*Nx+0]*s[0]+B[1*Nx+1]*s[1]};
+					double bss[4]={bs[0]*s[0],bs[0]*s[1],bs[1]*s[0],bs[1]*s[1]};
+
+					B[0*Nx+0]+=1/beta*y0_s*y0_s-1/sigma*(bss[0*Nx+0]*B[0*Nx+0]+bss[0*Nx+1]*B[1*Nx+0]);
+					B[0*Nx+1]+=1/beta*y0_s*y1_s-1/sigma*(bss[0*Nx+0]*B[0*Nx+1]+bss[0*Nx+1]*B[1*Nx+1]);
+					B[1*Nx+0]+=1/beta*y1_s*y0_s-1/sigma*(bss[1*Nx+0]*B[0*Nx+0]+bss[1*Nx+1]*B[1*Nx+0]);
+					B[1*Nx+1]+=1/beta*y1_s*y1_s-1/sigma*(bss[1*Nx+0]*B[0*Nx+1]+bss[1*Nx+1]*B[1*Nx+1]);
+				}*/
+			}
+		}
+
+
+		E_min=sqrt( (old_x[0]-x[0])*(old_x[0]-x[0]) + (old_x[1]-x[1])*(old_x[1]-x[1]));
+		if(E_min<ep*1000)	r*=4;
+		seta0+=c0;
+
+		cout<<"E_min"<<count_min<<"="<<E_min<<endl<<endl;
+	}
+
+	//v0　計算
+	int nv=0;
+	cout<<"fc="<<c0<<endl;
+	double v0=-1/( dc0[0]+dc0[1])*(dfx[0]+dfx[1]);
+
+		//if(iv==0)	v[0]=-1/( dc0[0]+dc0[1]+dc0[2]+dc0[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+		//else if(iv==1)	v[1]=-1/( dc1[0]+dc1[1]+dc1[2]+dc1[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+		//else if(iv==2)	v[2]=-1/( dc2[0]+dc2[1]+dc2[2]+dc2[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+	cout<<"x="<<x[0]<<", "<<x[1]<<endl;
+	cout<<"c="<<c0<<endl;
+	cout<<"v="<<v0<<endl;
+	cout<<"fx="<<fx<<endl;
+	cout<<"r="<<r<<endl<<endl;
+
+
+/*	double v0=1;
+	double v1=0;
+	double v2=2;
+	x[0]=0;	x[1]=1;	x[2]=2;	x[3]=-1;
+	c0=x[0]*x[0] +	x[1]*x[1] + x[2]*x[2] + x[3]*x[3] + x[0] -x[1] + x[2] -x[3] -8;
+	c1=x[0]*x[0] +	2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
+	c2=2*x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + 2*x[0] -x[1] -x[3] -5;	
+
+	cout<<"理論解"<<endl;
+	cout<<"x="<<x[0]<<", "<<x[1]<<", "<<x[2]<<", "<<x[3]<<endl;
+	cout<<"c="<<c0<<", "<<c1<<", "<<c2<<endl;
+	cout<<"v="<<v0<<", "<<v1<<", "<<v2<<endl;
+	cout<<"vc="<<c0*v0<<", "<<c1*v1<<", "<<c2*v2<<endl;*/
+
+
+	delete[]	x;
+	delete[]	old_x;
+	delete[]	dfx;
+	delete[]	dc0;
+	delete[]	dTxr;
+	delete[]	rfx;
+	delete[]	rc0;
+	delete[]	rTxr;
+	delete[]	B;
+	delete[]	d;
+	delete[]	Nr;
+
+	return 0;
+}
+
+int MM_method()
+{
+	////例題		数理計画入門　システム制御情報ライブラリー15　問題（4.78）	p.138
+	int Nx=4;
+	double *x=new double [Nx];
+	double *old_x=new double [Nx];
+	x[0]=10;
+	x[1]=-10;
+	x[2]=10;
 	x[3]=-10;
 
 
@@ -55,7 +352,7 @@ int main()
 	}
 
 
-	double r=0.01;
+	double r=0.1;
 	double ep=1e-10;
 	double seta0=0, seta1=0, seta2=0;
 	double E_min=1;
@@ -96,9 +393,9 @@ int main()
 			for(int i=0;i<Nx;i++)
 			{
 				dTxr[i]=dfx[i];
-				if(c0+seta0>0)	dTxr[i]+=0.5*r*(c0+seta0)*dc0[i];
-				if(c1+seta1>0)	dTxr[i]+=0.5*r*(c1+seta1)*dc1[i];
-				if(c2+seta2>0)	dTxr[i]+=0.5*r*(c2+seta2)*dc2[i];
+				if(c0+seta0>0)	dTxr[i]+=r*(c0+seta0)*dc0[i];
+				if(c1+seta1>0)	dTxr[i]+=r*(c1+seta1)*dc1[i];
+				if(c2+seta2>0)	dTxr[i]+=r*(c2+seta2)*dc2[i];
 			}
 
 			//cout<<"dTxr="<<dTxr[0]<<", "<<dTxr[1]<<", "<<dTxr[2]<<", "<<dTxr[3]<<endl;
@@ -108,9 +405,9 @@ int main()
 				for(int j=0;j<Nx;j++)
 				{
 					rTxr[i*Nx+j]=rfx[i*Nx+j];
-					if(c0+seta0>0)	rTxr[i*Nx+j]+=0.5*r*dc0[j]*dc0[i]+0.5*r*(c0+seta0)*rc0[i*Nx+j];
-					if(c1+seta1>0)	rTxr[i*Nx+j]+=0.5*r*dc1[j]*dc1[i]+0.5*r*(c1+seta1)*rc1[i*Nx+j];
-					if(c2+seta2>0)	rTxr[i*Nx+j]+=0.5*r*dc2[j]*dc2[i]+0.5*r*(c2+seta2)*rc2[i*Nx+j];
+					if(c0+seta0>0)	rTxr[i*Nx+j]+=r*dc0[j]*dc0[i]+r*(c0+seta0)*rc0[i*Nx+j];
+					if(c1+seta1>0)	rTxr[i*Nx+j]+=r*dc1[j]*dc1[i]+r*(c1+seta1)*rc1[i*Nx+j];
+					if(c2+seta2>0)	rTxr[i*Nx+j]+=r*dc2[j]*dc2[i]+r*(c2+seta2)*rc2[i*Nx+j];
 				}
 			}
 			//cout<<"rTxr="<<rTxr[0]<<", "<<rTxr[1]<<", "<<rTxr[2]<<", "<<rTxr[3]<<endl;
@@ -135,10 +432,100 @@ int main()
 
 		cout<<"E_min"<<count_min<<"="<<E_min<<endl<<endl;
 	}
+
+	double *v=new double [3];
+	v[0]=0;	v[1]=0;	v[2]=0;
+
+	int *Nv_n=new int [3];
+	Nv_n[0]=0;	Nv_n[1]=0;	Nv_n[2]=0;
+
+	//v0　計算
+	int nv=0;
+	cout<<"fc="<<c0<<", "<<c1<<", "<<c2<<endl;
+	if(c0>ep)	v[0]=0;
+	else
+	{
+		Nv_n[nv]=0;
+		nv++;
+	}
+	if(c1>ep)	v[1]=0;
+	else
+	{
+		Nv_n[nv]=1;
+		nv++;
+	}
+	if(c2>ep)	v[2]=0;
+	else
+	{
+		Nv_n[nv]=2;
+		nv++;
+	}
+	cout<<"nv="<<nv<<endl;
+	if(nv>1)
+	{
+		double  *Nrv=new double [nv];
+		double  *Nlv=new double [nv*nv];
+
+		for(int i=0;i<nv;i++)
+		{
+			for(int j=0;j<nv;j++)
+			{
+				int jv=Nv_n[j];
+				if(jv==0)	Nlv[i*nv+j]=dc0[i];
+				else if(jv==1)	Nlv[i*nv+j]=dc1[i];
+				else if(jv==2)	Nlv[i*nv+j]=dc2[i];
+				cout<<"Nlv["<<i<<","<<j<<"]="<<Nlv[i*nv+j]<<endl;
+			}
+			//Nrv[i]=-1*(dTxr[i]+rTxr[i*Nx+0]*d[0]+rTxr[i*Nx+1]*d[1]+rTxr[i*Nx+2]*d[2]+rTxr[i*Nx+3]*d[3]);
+			Nrv[i]=-dfx[i];
+			cout<<"Nrv["<<i<<"]="<<Nrv[i]<<endl;
+		}
+		gauss(Nlv,Nrv,nv);
+		for(int i=0;i<nv;i++)
+		{
+			int iv=Nv_n[i];
+			if(iv==0)	v[0]=Nrv[i];
+			else if(iv==1)	v[1]=Nrv[i];
+			else if(iv==2)	v[2]=Nrv[i];
+		}
+		delete[]	Nrv;
+		delete[]	Nlv;
+	}
+	else if(nv==1)
+	{
+		int iv=Nv_n[nv-1];
+		if(iv==0)	v[0]=-1/( dc0[0]+dc0[1]+dc0[2]+dc0[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3]);
+		else if(iv==1)	v[1]=-1/( dc1[0]+dc1[1]+dc1[2]+dc1[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3]);
+		else if(iv==2)	v[2]=-1/( dc2[0]+dc2[1]+dc2[2]+dc2[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3]);
+
+		//if(iv==0)	v[0]=-1/( dc0[0]+dc0[1]+dc0[2]+dc0[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+		//else if(iv==1)	v[1]=-1/( dc1[0]+dc1[1]+dc1[2]+dc1[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+		//else if(iv==2)	v[2]=-1/( dc2[0]+dc2[1]+dc2[2]+dc2[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+	}
 	cout<<"x="<<x[0]<<", "<<x[1]<<", "<<x[2]<<", "<<x[3]<<endl;
 	cout<<"c="<<c0<<", "<<c1<<", "<<c2<<endl;
+	cout<<"v="<<v[0]<<", "<<v[1]<<", "<<v[2]<<endl;
 	cout<<"fx="<<fx<<endl;
-	cout<<"r="<<r<<endl;
+	cout<<"r="<<r<<endl<<endl;
+
+	delete[]	v;
+	delete[]	Nv_n;
+
+
+	double v0=1;
+	double v1=0;
+	double v2=2;
+	x[0]=0;	x[1]=1;	x[2]=2;	x[3]=-1;
+	c0=x[0]*x[0] +	x[1]*x[1] + x[2]*x[2] + x[3]*x[3] + x[0] -x[1] + x[2] -x[3] -8;
+	c1=x[0]*x[0] +	2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
+	c2=2*x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + 2*x[0] -x[1] -x[3] -5;	
+
+	cout<<"理論解"<<endl;
+	cout<<"x="<<x[0]<<", "<<x[1]<<", "<<x[2]<<", "<<x[3]<<endl;
+	cout<<"c="<<c0<<", "<<c1<<", "<<c2<<endl;
+	cout<<"v="<<v0<<", "<<v1<<", "<<v2<<endl;
+	cout<<"vc="<<c0*v0<<", "<<c1*v1<<", "<<c2*v2<<endl;
+
 
 	delete[]	x;
 	delete[]	old_x;
@@ -157,7 +544,152 @@ int main()
 	return 0;
 }
 
+int MM_method2()
+{
+	////例題		システム工学第2版　森北出版（株）　演習問題5の4	p.197
+	int Nx=2;
+	double *x=new double [Nx];
+	double *old_x=new double [Nx];
+	x[0]=10;
+	x[1]=-10;
 
+
+	double c0=0;
+	double fx=0;
+	double Txr=0;
+
+
+	double *dfx=new double [Nx];
+	double *dc0=new double [Nx];
+	double *dTxr=new double [Nx];
+
+	double *rfx=new double [Nx*Nx];
+	double *rc0=new double [Nx*Nx];
+	double *rTxr=new double [Nx*Nx];
+
+	for(int i=0;i<Nx;i++)
+	{
+		dfx[i]=0;
+		dc0[i]=0;
+		dTxr[i]=0;
+		for(int j=0;j<Nx;j++)
+		{
+			rfx[i*Nx+j]=0;
+			rc0[i*Nx+j]=0;
+			rTxr[i*Nx+j]=0;
+		}
+	}
+
+
+	double r=1;
+	double ep=1e-10;
+	double seta0=0, seta1=0, seta2=0, seta3=0;
+	double E_min=1;
+	int count_min=0;
+
+	while(E_min>ep)
+	{
+		count_min++;
+		for(int i=0;i<Nx;i++)	old_x[i]=x[i];
+
+		double E=1;
+		int count=0;
+		while(E>ep)
+		{
+			count++;
+
+			fx=(x[0]-1)*(x[0]-1)+(x[1]-2)*(x[1]-2);
+			dfx[0]=2*(x[0]-1);	dfx[1]=2*(x[1]-2);
+			rfx[0*Nx+0]=2;	rfx[0*Nx+1]=0;	rfx[1*Nx+0]=0;	rfx[1*Nx+1]=2;
+
+			c0=x[0]*x[0]+x[1]*x[1]-1;
+			dc0[0]=2*x[0];	dc0[1]=2*x[1];
+			rc0[0*Nx+0]=2;	rc0[0*Nx+1]=0;	rc0[1*Nx+0]=0;	rc0[1*Nx+1]=2;
+
+			Txr=fx;
+			Txr+=0.5*r*(c0+seta0)*(c0+seta0);
+	
+			//cout<<"Txr="<<Txr<<endl;
+
+			for(int i=0;i<Nx;i++)
+			{
+				dTxr[i]=dfx[i];
+				dTxr[i]+=r*(c0+seta0)*dc0[i];
+			}
+
+			//cout<<"dTxr="<<dTxr[0]<<", "<<dTxr[1]<<", "<<dTxr[2]<<", "<<dTxr[3]<<endl;
+
+			for(int i=0;i<Nx;i++)
+			{
+				for(int j=0;j<Nx;j++)
+				{
+					rTxr[i*Nx+j]=rfx[i*Nx+j];
+					rTxr[i*Nx+j]+=r*dc0[j]*dc0[i]+r*(c0+seta0)*rc0[i*Nx+j];
+				}
+			}
+			//cout<<"rTxr="<<rTxr[0]<<", "<<rTxr[1]<<", "<<rTxr[2]<<", "<<rTxr[3]<<endl;
+			//cout<<rTxr[4]<<", "<<rTxr[5]<<", "<<rTxr[6]<<", "<<rTxr[7]<<endl;
+			//cout<<rTxr[8]<<", "<<rTxr[9]<<", "<<rTxr[10]<<", "<<rTxr[11]<<endl;
+			//cout<<rTxr[12]<<", "<<rTxr[13]<<", "<<rTxr[14]<<", "<<rTxr[15]<<endl;
+
+			gauss(rTxr,dTxr,Nx);
+			//cout<<"dTxr="<<dTxr[0]<<", "<<dTxr[1]<<", "<<dTxr[2]<<", "<<dTxr[3]<<endl;
+			for(int i=0;i<Nx;i++)	x[i]-=dTxr[i];
+
+
+			E=sqrt(dTxr[0]*dTxr[0]+dTxr[1]*dTxr[1]);
+			cout<<"E"<<count<<"="<<E<<endl;
+		}
+
+		E_min=sqrt( (old_x[0]-x[0])*(old_x[0]-x[0]) + (old_x[1]-x[1])*(old_x[1]-x[1]));
+		if(E_min<ep*1000)	r*=4;
+		seta0+=c0;
+
+		cout<<"E_min"<<count_min<<"="<<E_min<<endl<<endl;
+	}
+
+	//v0　計算
+	int nv=0;
+	cout<<"fc="<<c0<<endl;
+	double v0=-1/( dc0[0]+dc0[1])*(dfx[0]+dfx[1]);
+
+		//if(iv==0)	v[0]=-1/( dc0[0]+dc0[1]+dc0[2]+dc0[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+		//else if(iv==1)	v[1]=-1/( dc1[0]+dc1[1]+dc1[2]+dc1[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+		//else if(iv==2)	v[2]=-1/( dc2[0]+dc2[1]+dc2[2]+dc2[3])*(dTxr[0]+dTxr[1]+dTxr[2]+dTxr[3] + rTxr[0*Nx+0]*d[0]+rTxr[0*Nx+1]*d[1]+rTxr[0*Nx+2]*d[2]+rTxr[0*Nx+3]*d[3]);
+	cout<<"x="<<x[0]<<", "<<x[1]<<endl;
+	cout<<"c="<<c0<<endl;
+	cout<<"v="<<v0<<endl;
+	cout<<"fx="<<fx<<endl;
+	cout<<"r="<<r<<endl<<endl;
+
+
+/*	double v0=1;
+	double v1=0;
+	double v2=2;
+	x[0]=0;	x[1]=1;	x[2]=2;	x[3]=-1;
+	c0=x[0]*x[0] +	x[1]*x[1] + x[2]*x[2] + x[3]*x[3] + x[0] -x[1] + x[2] -x[3] -8;
+	c1=x[0]*x[0] +	2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
+	c2=2*x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + 2*x[0] -x[1] -x[3] -5;	
+
+	cout<<"理論解"<<endl;
+	cout<<"x="<<x[0]<<", "<<x[1]<<", "<<x[2]<<", "<<x[3]<<endl;
+	cout<<"c="<<c0<<", "<<c1<<", "<<c2<<endl;
+	cout<<"v="<<v0<<", "<<v1<<", "<<v2<<endl;
+	cout<<"vc="<<c0*v0<<", "<<c1*v1<<", "<<c2*v2<<endl;*/
+
+
+	delete[]	x;
+	delete[]	old_x;
+	delete[]	dfx;
+	delete[]	dc0;
+	delete[]	dTxr;
+	delete[]	rfx;
+	delete[]	rc0;
+	delete[]	rTxr;
+
+
+	return 0;
+}
 
 int SUMT_IPM()
 {
@@ -836,8 +1368,6 @@ int SQP_method()
 
 	/*
 	int Nx=4;
-=======
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	int Nv=3;
 
 	double *x=new double [Nx];
@@ -856,7 +1386,6 @@ int SQP_method()
 	double *B=new double [Nx*Nx];
 	double *Nr=new double [Nx];
 		
-<<<<<<< HEAD
 	double p=10.0;
 	double Fp=0;
 	double *dFp=new double[Nx];		
@@ -867,15 +1396,6 @@ int SQP_method()
 	int *Nv_n=new int [Nv];
 	double *Nrv=new double [Nv];
 	double *Nlv=new double [Nv*Nv];
-=======
-	double Fp=0;
-	double p=10.0;
-	double *dFp=new double[Nx];		
-
-	double *v=new double [Nv];
-	int *Nv_n=new int [Nv];
-
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 	//初期化
 	x[0]=10;
@@ -906,7 +1426,6 @@ int SQP_method()
 	{
 		v[i]=0;
 		Nv_n[i]=0;
-<<<<<<< HEAD
 		Nrv[i]=0;
 		for(int j=0;j<Nv;j++)	Nlv[i*Nv+j]=0;
 	}
@@ -916,27 +1435,16 @@ int SQP_method()
 	dfx[0]=2*x[0]-5;	dfx[1]=2*x[1]-5;	dfx[2]=4*x[2]-21;	dfx[3]=2*x[3]+7;
 
 	//c関係　計算
-=======
-	}
-
-	fx=x[0]*x[0] + x[1]*x[1] + 2*x[2]*x[2] + x[3]*x[3] -5*x[0] -5*x[1] -21*x[2] + 7*x[3];
-	dfx[0]=2*x[0]-5;	dfx[1]=2*x[1]-5;	dfx[2]=4*x[2]-21;	dfx[3]=2*x[3]+7;
-
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	c0=x[0]*x[0] +	x[1]*x[1] + x[2]*x[2] + x[3]*x[3] + x[0] -x[1] + x[2] -x[3] -8;
 	c1=x[0]*x[0] +	2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
 	c2=2*x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + 2*x[0] -x[1] -x[3] -5;	
 	dc0[0]=2*x[0]+1;	dc0[1]=2*x[1]-1;	dc0[2]=2*x[2]+1;	dc0[3]=2*x[3]-1;
 	dc1[0]=2*x[0]-1;	dc1[1]=4*x[1];		dc1[2]=2*x[2];		dc1[3]=4*x[3]-1;
 	dc2[0]=4*x[0]+2;	dc2[1]=2*x[1]-1;	dc2[2]=2*x[2];		dc2[3]=-1;
-<<<<<<< HEAD
 	
 	for(int i=0;i<Nx;i++)	dL[i]=dfx[i]+v[0]*dc0[i]+v[1]*dc1[i]+v[2]*dc2[i];
 
 	//Fp　計算
-=======
-
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	Fp=fx;
 	for(int i=0;i<Nx;i++)	dFp[i]+=dfx[i];
 	if(c0>0)
@@ -967,7 +1475,6 @@ int SQP_method()
 		for(int i=0;i<Nx;i++)	if(dc2[i]>0)	dFp[i]+=dc2[i]*p;
 	}
 
-<<<<<<< HEAD
 	double E=1;
 	double ep=1e-10;
 
@@ -984,13 +1491,6 @@ int SQP_method()
 	fc0=c0+(dc0[0]*d[0]+dc0[1]*d[1]+dc0[2]*d[2]+dc0[3]*d[3]);
 	fc1=c1+(dc1[0]*d[0]+dc1[1]*d[1]+dc1[2]*d[2]+dc1[3]*d[3]);
 	fc2=c2+(dc2[0]*d[0]+dc2[1]*d[1]+dc2[2]*d[2]+dc2[3]*d[3]);
-=======
-	//v0　計算
-	int nv=0;
-	double fc0=c0+(dc0[0]*d[0]+dc0[1]*d[1]+dc0[2]*d[2]+dc0[3]*d[3]);
-	double fc1=c1+(dc1[0]*d[0]+dc1[1]*d[1]+dc1[2]*d[2]+dc1[3]*d[3]);
-	double fc2=c2+(dc2[0]*d[0]+dc2[1]*d[1]+dc2[2]*d[2]+dc2[3]*d[3]);
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	if(fc0!=0)	v[0]=0;
 	else
 	{
@@ -1011,17 +1511,11 @@ int SQP_method()
 	}
 	if(nv>1)
 	{
-<<<<<<< HEAD
-=======
-		double *Nr=new double [nv];
-		double *Nl=new double [nv*nv];
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 		for(int i=0;i<nv;i++)
 		{
 			for(int j=0;j<nv;j++)
 			{
 				int jv=Nv_n[j];
-<<<<<<< HEAD
 				if(jv==0)	Nlv[i*nv+j]=dc0[j];
 				else if(jv==1)	Nlv[i*nv+j]=dc1[j];
 				else if(jv==2)	Nlv[i*nv+j]=dc2[j];
@@ -1035,27 +1529,11 @@ int SQP_method()
 			if(iv==0)	v[0]=Nrv[i];
 			else if(iv==1)	v[1]=Nrv[i];
 			else if(iv==2)	v[2]=Nrv[i];
-=======
-				if(jv==0)	Nl[i*nv+j]=dc0[j];
-				else if(jv==1)	Nl[i*nv+j]=dc1[j];
-				else if(jv==2)	Nl[i*nv+j]=dc2[j];
-			}
-			Nr[i]=-1*(dfx[i]+B[i*Nx+0]*d[0]+B[i*Nx+1]*d[1]+B[i*Nx+2]*d[2]+B[i*Nx+3]*d[3]);
-		}
-		gauss(Nl,Nr,nv);
-		for(int i=0;i<nv;i++)
-		{
-			int iv=Nv_n[i];
-			if(iv==0)	v[0]=Nr[i];
-			else if(iv==1)	v[1]=Nr[i];
-			else if(iv==2)	v[2]=Nr[i];
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 		}
 	}
 	else if(nv==1)
 	{
 		int iv=Nv_n[nv-1];
-<<<<<<< HEAD
 		if(iv==0)	v[0]=-1/( dc0[0]+dc0[1]+dc0[2]+dc0[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
 		else if(iv==1)	v[1]=-1/( dc1[0]+dc1[1]+dc1[2]+dc1[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
 		else if(iv==2)	v[2]=-1/( dc2[0]+dc2[1]+dc2[2]+dc2[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
@@ -1063,18 +1541,6 @@ int SQP_method()
 
 	E=sqrt(d[0]*d[0]+d[1]*d[1]+d[2]*d[2]+d[3]*d[3]);
 	//E=sqrt(dFp[0]*dFp[0]+dFp[1]*dFp[1]+dFp[2]*dFp[2]+dFp[3]*dFp[3]);
-=======
-		if(iv==0)	v[0]=-1/(dc0[0]+dc0[1]+dc0[2]+dc0[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
-		else if(iv==1)	v[1]=-1/(dc1[0]+dc1[1]+dc1[2]+dc1[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
-		else if(iv==2)	v[2]=-1/(dc2[0]+dc2[1]+dc2[2]+dc2[3])*(dfx[0]+dfx[1]+dfx[2]+dfx[3] + B[0*Nx+0]*d[0]+B[0*Nx+1]*d[1]+B[0*Nx+2]*d[2]+B[0*Nx+3]*d[3]);
-	}
-
-	double E=1;
-	double ep=1e-10;
-
-	//E=sqrt(dFp[0]*dFp[0]+dFp[1]*dFp[1]+dFp[2]*dFp[2]+dFp[3]*dFp[3]);
-	E=sqrt(dfx[0]*dfx[0]+dfx[1]*dfx[1]+dfx[2]*dfx[2]+dfx[3]*dfx[3]);
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 	//出力
 	cout<<"x0="<<x[0]<<", "<<x[1]<<", "<<x[2]<<", "<<x[3]<<endl;
@@ -1084,16 +1550,11 @@ int SQP_method()
 	cout<<"Fp0="<<Fp<<endl;
 	//cout<<"dFp0="<<dFp[0]<<", "<<dFp[1]<<", "<<dFp[2]<<", "<<dFp[3]<<endl;
 	cout<<"dfx0="<<dfx[0]<<", "<<dfx[1]<<", "<<dfx[2]<<", "<<dfx[3]<<endl;
-<<<<<<< HEAD
 	cout<<"d0="<<d[0] <<", "<<d[1] <<", "<<d[2] <<", "<<d[3] <<endl;
 	cout<<"d0/answer="<<d[0]/(-15) <<", "<<d[1]/25 <<", "<<d[2]/(-19) <<", "<<d[3]/13 <<endl;
 	//cout<<"fx0="<<fx<<endl;
 	cout<<"E0="<<E<<endl;
 
-=======
-	//cout<<"fx0="<<fx<<endl;
-	cout<<"E0="<<E<<endl<<endl;
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 	if(E<ep)	return 0;
 	else
@@ -1101,7 +1562,6 @@ int SQP_method()
 		int count=0;
 		while(E>ep)
 		{
-<<<<<<< HEAD
 			double x_k[4]={x[0], x[1], x[2], x[3]};
 			double dFp_k[4]={dFp[0], dFp[1], dFp[2], dFp[3]};
 			double dfx_k[4]={dfx[0], dfx[1], dfx[2], dfx[3]};
@@ -1160,58 +1620,12 @@ int SQP_method()
 						//Bに関する出力
 			count++;
  			for(int i=0;i<Nx;i++)	x[i]+=d[i]*a_min;
-=======
-			count++;
-			double x_k[4]={x[0], x[1],x[2],x[3]};
-			double dFp_k[4]={dFp[0],dFp[1],dFp[2],dFp[3]};
-			double dL_k[4]={dfx[0]+v[0]*dc0[0]+v[1]*dc1[0]+v[2]*dc2[0],
-				dfx[1]+v[0]*dc0[1]+v[1]*dc1[1]+v[2]*dc2[1],
-				dfx[2]+v[0]*dc0[2]+v[1]*dc1[2]+v[2]*dc2[2],
-				dfx[3]+v[0]*dc0[3]+v[1]*dc1[3]+v[2]*dc2[3]};
-			
-			Nr[0]=dfx[0];	Nr[1]=dfx[1];	Nr[2]=dfx[2];	Nr[3]=dfx[3];	
-			//Nr[0]=dFp[0];	Nr[1]=dFp[1];	Nr[2]=dFp[2];	Nr[3]=dFp[3];	
-			gauss(B,Nr,Nx);
-			d[0]=-Nr[0];	d[1]=-Nr[1];	d[2]=-Nr[2];	d[3]=-Nr[3];	
-
-			double Fp_min=Fp;
-			double a_min=0;
-			for(int i=0;i<100000;i++)
-			{
-				double alpha=(i+1)*1e-5;
-				
-				double x_a[4]={x[0]+d[0]*alpha, x[1]+d[1]*alpha, x[2]+d[2]*alpha, x[3]+d[3]*alpha};
-			
-				double c0_a=x_a[0]*x_a[0] +	x_a[1]*x_a[1] + x_a[2]*x_a[2] + x_a[3]*x_a[3] + x_a[0] -x_a[1] + x_a[2] -x_a[3] -8;
-				double c1_a=x_a[0]*x_a[0] +	2*x_a[1]*x_a[1] + x_a[2]*x_a[2] + 2*x_a[3]*x_a[3] -x_a[0] -x_a[3] -10;
-				double c2_a=2*x_a[0]*x_a[0] + x_a[1]*x_a[1] + x_a[2]*x_a[2] + 2*x_a[0] -x_a[1] -x_a[3] -5;	
-				
-				double fx_a=x_a[0]*x_a[0] + x_a[1]*x_a[1] + 2*x_a[2]*x_a[2] + x_a[3]*x_a[3] -5*x_a[0] -5*x_a[1] -21*x_a[2] + 7*x_a[3];
-
-				double Fp_a=fx_a;
-				if(c0_a>0)	Fp_a+=c0_a*p;
-				if(c1_a>0)	Fp_a+=c1_a*p;
-				if(c2_a>0)	Fp_a+=c2_a*p;
-
-				if(Fp_a<Fp_min)
-				{
-					Fp_min=Fp_a;
-					a_min=alpha;
-				}
-			}
-
-			for(int i=0;i<Nx;i++)	x[i]+=d[i]*a_min;
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 			fx=x[0]*x[0] + x[1]*x[1] + 2*x[2]*x[2] + x[3]*x[3] -5*x[0] -5*x[1] -21*x[2] + 7*x[3];
 			dfx[0]=2*x[0]-5;	dfx[1]=2*x[1]-5;	dfx[2]=4*x[2]-21;	dfx[3]=2*x[3]+7;
 
 			c0=x[0]*x[0] +	x[1]*x[1] + x[2]*x[2] + x[3]*x[3] + x[0] -x[1] + x[2] -x[3] -8;
-<<<<<<< HEAD
 			c1=x[0]*x[0] + 2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
-=======
-			c1=x[0]*x[0] +	2*x[1]*x[1] + x[2]*x[2] + 2*x[3]*x[3] -x[0] -x[3] -10;
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 			c2=2*x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + 2*x[0] -x[1] -x[3] -5;
 			dc0[0]=2*x[0]+1;	dc0[1]=2*x[1]-1;	dc0[2]=2*x[2]+1;	dc0[3]=2*x[3]-1;
 			dc1[0]=2*x[0]-1;	dc1[1]=4*x[1];		dc1[2]=2*x[2];		dc1[3]=4*x[3]-1;
@@ -1248,17 +1662,10 @@ int SQP_method()
 			}
 
 			//v0　計算
-<<<<<<< HEAD
 			nv=0;
 			fc0=c0+(dc0[0]*d[0]+dc0[1]*d[1]+dc0[2]*d[2]+dc0[3]*d[3]);
 			fc1=c1+(dc1[0]*d[0]+dc1[1]*d[1]+dc1[2]*d[2]+dc1[3]*d[3]);
 			fc2=c2+(dc2[0]*d[0]+dc2[1]*d[1]+dc2[2]*d[2]+dc2[3]*d[3]);
-=======
-			int nv=0;
-			double fc0=c0+(dc0[0]*d[0]+dc0[1]*d[1]+dc0[2]*d[2]+dc0[3]*d[3]);
-			double fc1=c1+(dc1[0]*d[0]+dc1[1]*d[1]+dc1[2]*d[2]+dc1[3]*d[3]);
-			double fc2=c2+(dc2[0]*d[0]+dc2[1]*d[1]+dc2[2]*d[2]+dc2[3]*d[3]);
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 			if(fc0!=0)	v[0]=0;
 			else
 			{
@@ -1279,17 +1686,11 @@ int SQP_method()
 			}
 			if(nv>1)
 			{
-<<<<<<< HEAD
-=======
-				double *Nr=new double [nv];
-				double *Nl=new double [nv*nv];
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 				for(int i=0;i<nv;i++)
 				{
 					for(int j=0;j<nv;j++)
 					{
 						int jv=Nv_n[j];
-<<<<<<< HEAD
 						if(jv==0)	Nlv[i*nv+j]=dc0[j];
 						else if(jv==1)	Nlv[i*nv+j]=dc1[j];
 						else if(jv==2)	Nlv[i*nv+j]=dc2[j];
@@ -1303,21 +1704,6 @@ int SQP_method()
 					if(iv==0)	v[0]=Nrv[i];
 					else if(iv==1)	v[1]=Nrv[i];
 					else if(iv==2)	v[2]=Nrv[i];
-=======
-						if(jv==0)	Nl[i*nv+j]=dc0[j];
-						else if(jv==1)	Nl[i*nv+j]=dc1[j];
-						else if(jv==2)	Nl[i*nv+j]=dc2[j];
-					}
-					Nr[i]=-1*(dfx[i]+B[i*Nx+0]*d[0]+B[i*Nx+1]*d[1]+B[i*Nx+2]*d[2]+B[i*Nx+3]*d[3]);
-				}
-				gauss(Nl,Nr,nv);
-				for(int i=0;i<nv;i++)
-				{
-					int iv=Nv_n[i];
-					if(iv==0)	v[0]=Nr[i];
-					else if(iv==1)	v[1]=Nr[i];
-					else if(iv==2)	v[2]=Nr[i];
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 				}
 			}
 			else if(nv==1)
@@ -1329,7 +1715,6 @@ int SQP_method()
 			}
 
 			//E=sqrt(dFp[0]*dFp[0]+dFp[1]*dFp[1]+dFp[2]*dFp[2]+dFp[3]*dFp[3]);
-<<<<<<< HEAD
 			E=sqrt(d[0]*d[0]+d[1]*d[1]+d[2]*d[2]+d[3]*d[3]);
 			
 			//出力
@@ -1348,23 +1733,6 @@ int SQP_method()
 				dfx_k[1]+v[0]*dc0_k[1]+v[1]*dc1_k[1]+v[2]*dc2_k[1],
 				dfx_k[2]+v[0]*dc0_k[2]+v[1]*dc1_k[2]+v[2]*dc2_k[2],
 				dfx_k[3]+v[0]*dc0_k[3]+v[1]*dc1_k[3]+v[2]*dc2_k[3]};
-=======
-			E=sqrt(dfx[0]*dfx[0]+dfx[1]*dfx[1]+dfx[2]*dfx[2]+dfx[3]*dfx[3]);
-			
-			//出力
-			cout<<"x"<<count<<"="<<x[0]<<", "<<x[1]<<", "<<x[2]<<", "<<x[3]<<endl;
-			cout<<"fc"<<count<<"="<<fc0<<", "<<fc1<<", "<<fc2<<endl;
-			cout<<"v"<<count<<"="<<v[0]<<", "<<v[1]<<", "<<v[2]<<endl;
-			cout<<"Fp"<<count<<"="<<Fp_min<<", alpha="<<a_min<<endl;
-			//cout<<"fx"<<count<<"="<<f<<endl;
-			cout<<"d"<<count<<"="<<d[0] <<", "<<d[1] <<", "<<d[2] <<", "<<d[3] <<endl;
-			cout<<"da"<<count<<"="<<d[0]*a_min<<", "<<d[1]*a_min<<", "<<d[2]*a_min<<", "<<d[3]*a_min<<endl;
-			cout<<"E"<<count<<"="<<E<<endl;
-			cout<<endl;
-			if(E<ep)	break;
-
-			for(int i=0;i<Nx;i++)	dL[i]=dfx[i]+v[0]*dc0[i]+v[1]*dc1[i]+v[2]*dc2[i];
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 
 			double s[4]={x[0]-x_k[0],x[1]-x_k[1], x[2]-x_k[2], x[3]-x_k[3]};
 			//double y[4]={dFp[0]-dFp_k[0], dFp[1]-dFp_k[1], dFp[2]-dFp_k[2], dFp[3]-dFp_k[3]};
@@ -1372,7 +1740,6 @@ int SQP_method()
 
 			double beta=y[0]*s[0]+y[1]*s[1]+y[2]*s[2]+y[3]*s[3];
 
-<<<<<<< HEAD
 			double sigma=(s[0]*B[0*Nx+0]+s[1]*B[1*Nx+0]+s[2]*B[2*Nx+0]+s[3]*B[3*Nx+0])*s[0]
 			+(s[0]*B[0*Nx+1]+s[1]*B[1*Nx+1]+s[2]*B[2*Nx+1]+s[3]*B[3*Nx+1])*s[1]
 			+(s[0]*B[0*Nx+2]+s[1]*B[1*Nx+2]+s[2]*B[2*Nx+2]+s[3]*B[3*Nx+2])*s[2]
@@ -1381,17 +1748,6 @@ int SQP_method()
 			double seta=1.0;
 			if(beta>0)
 			{
-=======
-			if(beta>0)
-			{
-
-				double sigma=(s[0]*B[0*Nx+0]+s[1]*B[1*Nx+0]+s[2]*B[2*Nx+0]+s[3]*B[3*Nx+0])*s[0]
-				+(s[0]*B[0*Nx+1]+s[1]*B[1*Nx+1]+s[2]*B[2*Nx+1]+s[3]*B[3*Nx+1])*s[1]
-				+(s[0]*B[0*Nx+2]+s[1]*B[1*Nx+2]+s[2]*B[2*Nx+2]+s[3]*B[3*Nx+2])*s[2]
-				+(s[0]*B[0*Nx+3]+s[1]*B[1*Nx+3]+s[2]*B[2*Nx+3]+s[3]*B[3*Nx+3])*s[3];
-				
-				double seta=1.0;
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 				if(beta<0.2*sigma)
 				{
 					seta=0.8*sigma/(sigma-beta);
@@ -1435,7 +1791,6 @@ int SQP_method()
 				B[3*Nx+1]+=1/beta*y[3]*y[1]-1/sigma*(bss[3*Nx+0]*B[0*Nx+1]+bss[3*Nx+1]*B[1*Nx+1]+bss[3*Nx+2]*B[2*Nx+1]+bss[3*Nx+3]*B[3*Nx+1]);
 				B[3*Nx+2]+=1/beta*y[3]*y[2]-1/sigma*(bss[3*Nx+0]*B[0*Nx+2]+bss[3*Nx+1]*B[1*Nx+2]+bss[3*Nx+2]*B[2*Nx+2]+bss[3*Nx+3]*B[3*Nx+2]);
 				B[3*Nx+3]+=1/beta*y[3]*y[3]-1/sigma*(bss[3*Nx+0]*B[0*Nx+3]+bss[3*Nx+1]*B[1*Nx+3]+bss[3*Nx+2]*B[2*Nx+3]+bss[3*Nx+3]*B[3*Nx+3]);
-<<<<<<< HEAD
 			}			
 			cout<<"beta"<<count<<"="<<beta<<endl;
 
@@ -1453,15 +1808,6 @@ int SQP_method()
 
 	*/
 
-=======
-			}
-			//Bに関する出力
-			cout<<"beta"<<count<<"="<<beta<<endl;
-			//*/
-		}
-	}
-
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	delete[]	x;
 	delete[]	dfx;
 	delete[]	dc0;
@@ -1473,12 +1819,8 @@ int SQP_method()
 	delete[]	dFp;
 	delete[]	v;
 	delete[]	Nv_n;
-<<<<<<< HEAD
 	delete[]	Nrv;
 	delete[]	Nlv;
-=======
-
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 	return 0;
 }
 
@@ -1547,9 +1889,9 @@ int q_newton()
 			double f_min=f;
 			double a_min=0;
 
-			for(int i=0;i<100000;i++)
+			for(int i=0;i<1000;i++)
 			{
-				double alpha=(i+1)*1e-5;
+				double alpha=(i+1)*1e-3;
 				double x0_a=x[0]+d[0]*alpha;
 				double x1_a=x[1]+d[1]*alpha;
 				double f_a=(x0_a-1)*(x0_a-1)+10*(x0_a*x0_a-x1_a)*(x0_a*x0_a-x1_a);
@@ -1611,11 +1953,6 @@ int q_newton()
 }
 
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 31bddf47227b693fc599e2002d3fd99554aebf0e
 int newton()
 {
 	int N=2;
