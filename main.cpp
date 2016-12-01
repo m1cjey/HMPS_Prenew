@@ -1,4 +1,3 @@
-
 #pragma once
 using namespace std;
 
@@ -50,7 +49,7 @@ int h_q();
 void PM_AVS(int t_max,int t, double *qn);
 void MM_AVS(int t_max, int t,double Dt, double mi, double *qn,double *pn);
 
-int main()	
+int main_SEM()	
 {
 	system("mkdir E_QN");
 	system("mkdir p_QN");
@@ -731,7 +730,7 @@ int main_hy0()
 	double Tr=0;
 	double dTr[6]={0,0,0,0,0,0};
 
-	double r=0.01;
+	double r=0.1;
 	double ep=1e-5;
 	double ep_min=1e-5;
 	double theta=0;
@@ -820,6 +819,9 @@ int main_hy0()
 
 			cout<<"ÚG"<<t<<" ,QP_method"<<endl;
 
+			theta=0;
+			theta_dhdt=0;
+			r=0.1;
 
 			E_min=1;
 			int count_min=0;
@@ -3036,7 +3038,7 @@ int main_n1()
 }
 
 
-int h_q()	
+int main()//h_q()	
 {
 	system("mkdir E");
 	system("mkdir dp");
@@ -3045,7 +3047,7 @@ int h_q()
 	////—á‘è		ƒVƒXƒeƒ€HŠw‘æ2”Å@X–ko”ÅiŠ”j@‰‰K–â‘è5‚Ì4	p.197
 	int Nx=2;
 	double mi=1.0;
-	double Dt=1e-3;
+	double Dt=0.1;
 	double nG[DIMENSION]={0,0,1};
 	double n[DIMENSION]={0,0,1};
 	double a[DIMENSION]={0,0,0};
@@ -3127,6 +3129,8 @@ int h_q()
 			cout<<"QP_method"<<endl;
 			dp[A_X]=1;	dp[A_Y]=1;	dp[A_Z]=1;
 			dq[A_X]=1;	dq[A_Y]=1;	dq[A_Z]=1;
+			r=0.01;
+			theta=0;
 			double E_min=1;
 			int count_min=0;
 			while(E_min>ep_min)
@@ -3345,7 +3349,7 @@ int h_q()
 								+(s[0]*B[0*Nx*3+4]+s[1]*B[1*Nx*3+4]+s[2]*B[2*Nx*3+4]+s[3]*B[3*Nx*3+4]+s[4]*B[4*Nx*3+4]+s[5]*B[5*Nx*3+4])*s[4]
 								+(s[0]*B[0*Nx*3+5]+s[1]*B[1*Nx*3+5]+s[2]*B[2*Nx*3+5]+s[3]*B[3*Nx*3+5]+s[4]*B[4*Nx*3+5]+s[5]*B[5*Nx*3+5])*s[5];
 
-					cout<<"beta"<<count<<"="<<beta<<", sigma"<<count<<"="<<sigma<<endl;
+					//cout<<"beta"<<count<<"="<<beta<<", sigma"<<count<<"="<<sigma<<endl;
 
 					if(beta>0)//(beta>=0.2*sigma)
 					{
