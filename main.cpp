@@ -49,6 +49,374 @@ int h_q();
 void PM_AVS(int t_max,int t, double *qn);
 void MM_AVS(int t_max, int t,double Dt, double mi, double *qn,double *pn);
 
+
+int main()	
+{
+	system("mkdir E_QN");
+	system("mkdir p_QN");
+	system("mkdir q_QN");
+	system("mkdir lam_QN");
+	system("mkdir mu_QN");
+	system("mkdir Tr_QN");
+	system("mkdir h_QN");
+	system("mkdir dhdt_QN");
+
+	system("mkdir E_QP");
+	system("mkdir count_QP");
+	system("mkdir h_QP");
+	system("mkdir dhdt_QP");
+	system("mkdir p_QP");
+	system("mkdir q_QP");
+	system("mkdir lam_QP");
+	system("mkdir mu_QP");
+	system("mkdir Tr_QP");
+
+
+	////例題		システム工学第2版　森北出版（株）　演習問題5の4	p.197
+	int Nx=2;
+	double mi=1.0;
+	double Dt=0.01;
+	double nG[DIMENSION]={0,0,1};
+	double n[DIMENSION]={0,0,1};
+	double a[DIMENSION]={0,0,0};
+
+	double lam=0;
+	double mu=0;
+
+	double old_lam=0;
+	double old_mu=0;
+
+	double Ln=0;
+	double L=0;
+	double dL[2]={0,0};
+	double rL[4]={0,0,0,0};
+	
+	double h=0;		//h(q)での定義が正解
+	double dh[2]={0,0};
+	double dhdt=0;
+	double d_dhdt[2]={0,0};
+
+	double Tr=0;
+	double *dTr=new double [2];
+	double *rTr=new double [2*2];
+
+	int count=1;
+	int count_min=1;
+	double r=1;
+	double ep=1e-5;
+	double ep_min=1e-5;
+	double theta_h=0;
+	double theta_dh=0;
+	int c_max=10000;
+	double E=1;
+	double E_min=1;
+
+	int t=0;
+	int t_max=1000;
+
+	double p0[DIMENSION]={0,0,0};
+	double q0[DIMENSION]={0,0,5};
+	double pn[DIMENSION]={0,0,0};
+	double qn[DIMENSION]={0,0,0};
+	double pn1[DIMENSION]={0,0,0};
+	double qn1[DIMENSION]={0,0,0};
+	double pn1_2[DIMENSION]={0,0,0};
+	double pn_1[DIMENSION]={0,0,0};
+	double qn_1[DIMENSION]={0,0,0};
+
+	ofstream fs("intial_data.csv");
+	fs<<"r, "<<r<<endl;
+	fs<<"Dt, "<<Dt<<endl;
+	fs<<"mi, "<<mi<<endl;
+	fs<<"p0, "<<p0[A_X]<<","<<p0[A_Y]<<","<<p0[A_Z]<<endl;
+	fs<<"q0, "<<q0[A_X]<<","<<q0[A_Y]<<","<<q0[A_Z]<<endl;
+	fs<<"t_max, "<<t_max<<endl;
+	fs<<"ep_min, "<<ep_min<<endl;
+	fs<<"ep, "<<ep<<endl;
+	fs.close();
+
+
+	cout<<"Calculation Start"<<endl;
+
+
+	pn[A_X]=p0[A_X];
+	pn[A_Y]=p0[A_Y];
+	pn[A_Z]=p0[A_Z];
+	qn[A_X]=q0[A_X];
+	qn[A_Y]=q0[A_Y];
+	qn[A_Z]=q0[A_Z];
+
+	double E0=0.5/mi*(pn[A_X]*pn[A_X]+pn[A_Y]*pn[A_Y]+pn[A_Z]*pn[A_Z])+mi*G*(qn[A_X]*nG[A_X]+qn[A_Y]*nG[A_Y]+qn[A_Z]*nG[A_Z]);
+
+
+	while(t<t_max)
+	{
+		t++;
+		clock_t t0=clock();
+
+		pn_1[A_X]=pn[A_X];	pn_1[A_Y]=pn[A_Y];	pn_1[A_Z]=pn[A_Z];
+		qn_1[A_X]=pn[A_X];	qn_1[A_Y]=pn[A_Y];	qn_1[A_Z]=pn[A_Z];
+
+
+		pn1_2[A_X]=pn_1[A_X]-0.5*Dt*mi*G*nG[A_X];	pn1_2[A_Y]=pn_1[A_Y]-0.5*Dt*mi*G*nG[A_Y];	pn1_2[A_Z]=pn_1[A_Z]-0.5*Dt*mi*G*nG[A_Z];
+		qn[A_X]+=Dt/mi*pn1_2[A_X];	qn[A_Y]+=Dt/mi*pn1_2[A_Y];	qn[A_Z]+=Dt/mi*pn1_2[A_Z];
+		pn[A_X]+=pn1_2[A_X]-0.5*Dt*mi*G*nG[A_X];	pn[A_Y]+=pn1_2[A_Y]-0.5*Dt*mi*G*nG[A_Y];	pn[A_Z]+=pn1_2[A_Z]-0.5*Dt*mi*G*nG[A_Z];	
+
+		if(t==1)
+		{
+			ofstream init_p("p.csv", ios::trunc);
+			init_p.close();
+			ofstream init_q("q.csv", ios::trunc);
+			init_q.close();
+			ofstream fh("h.csv", ios::trunc);
+			fh.close();
+			ofstream fdh("dhdt.csv", ios::trunc);
+			fdh.close();
+			ofstream init_t("time_log.csv", ios::trunc);
+			init_t.close();
+			ofstream init_En("Energy.csv", ios::trunc);
+			init_En.close();
+			ofstream init_cmin("cmin.csv", ios::trunc);
+			init_cmin.close();
+		}
+
+//		cout<<"pn"<<t<<"="<<pn[0]<<", "<<pn[1]<<", "<<pn[2]<<endl;
+//		cout<<"qn"<<t<<"="<<qn[0]<<", "<<qn[1]<<", "<<qn[2]<<endl;
+
+		h=-1*( (qn[A_X]-a[A_X])*n[A_X] + (qn[A_Y]-a[A_Y])*n[A_Y] + (qn[A_Z]-a[A_Z])*n[A_Z]);
+		if(h>0)
+		{
+			pn[A_X]=pn_1[A_X];	pn[A_Y]=pn_1[A_Y];	pn[A_Z]=pn_1[A_Z];
+			qn[A_X]=qn_1[A_X];	qn[A_Y]=qn_1[A_Y];	qn[A_Z]=qn_1[A_Z];//
+
+			cout<<"接触"<<t<<" ,QP_method"<<endl;
+			
+			theta_dh=0;
+			theta_h=0;
+			r=0.1;
+			lam=1;
+			mu=1;
+
+			Ln=0.5/mi*(pn[A_X]*pn[A_X]+pn[A_Y]*pn[A_Y]+pn[A_Z]*pn[A_Z])-mi*G*(qn[A_X]*nG[A_X]+qn[A_Y]*nG[A_Y]+qn[A_Z]*nG[A_Z]);
+
+			E_min=1;
+			count_min=0;
+			while(E_min>ep_min)
+			{
+				count_min++;
+				//if(count_min>c_max && h<=0)	break;
+
+				old_lam=lam;
+				old_mu=mu;
+
+				lam=1;
+				mu=1;
+				E=1;
+				count=0;
+				while(E>ep)
+				{
+					count++;
+					//if(count>c_max)	break;
+
+					pn1_2[A_X]=pn[A_X]-0.5*Dt*(mi*G*nG[A_X]-n[A_X]*lam);
+					pn1_2[A_Y]=pn[A_Y]-0.5*Dt*(mi*G*nG[A_Y]-n[A_Y]*lam);
+					pn1_2[A_Z]=pn[A_Z]-0.5*Dt*(mi*G*nG[A_Z]-n[A_Z]*lam);						
+		
+					qn1[A_X]=qn[A_X]+Dt/mi*pn1_2[A_X];
+					qn1[A_Y]=qn[A_Y]+Dt/mi*pn1_2[A_Y];
+					qn1[A_Z]=qn[A_Z]+Dt/mi*pn1_2[A_Z];
+
+					pn1[A_X]=pn[A_X]-Dt*mi*G*nG[A_X]+0.5*Dt*n[A_X]*(lam+mu);	
+					pn1[A_Y]=pn[A_Y]-Dt*mi*G*nG[A_Y]+0.5*Dt*n[A_Y]*(lam+mu);	
+					pn1[A_Z]=pn[A_Z]-Dt*mi*G*nG[A_Z]+0.5*Dt*n[A_Z]*(lam+mu);	
+
+
+					L=0.5/mi*(pn1[A_X]*pn1[A_X] + pn1[A_Y]*pn1[A_Y] + pn1[A_Z]*pn1[A_Z])-mi*G*(qn1[A_X]*nG[A_X] + qn1[A_Y]*nG[A_Y] + qn1[A_Z]*nG[A_Z]);
+
+					Tr=(L-Ln)*(L-Ln);
+
+					h=-1*( (qn1[A_X] - a[A_X])*n[A_X] + (qn1[A_Y] - a[A_Y])*n[A_Y] + (qn1[A_Z] - a[A_Z])*n[A_Z]);
+					dhdt=-1/mi*(n[A_X]*pn1[A_X]+n[A_Y]*pn1[A_Y]+n[A_Z]*pn1[A_Z]);
+
+					if(h+theta_h>0)		Tr+=0.5*r*(h+theta_h)*(h+theta_h);
+					if(dhdt+theta_dh>0)	Tr+=0.5*r*(dhdt+theta_dh)*(dhdt+theta_dh);
+
+
+					dL[0]=0.5/mi*Dt*(n[A_X]*pn1[A_X]+n[A_Y]*pn1[A_Y]+n[A_Z]*pn1[A_Z])-0.5*G*Dt*Dt*(n[A_X]*nG[A_X]+n[A_Y]*nG[A_Y]+n[A_Z]*nG[A_Z]);
+					dL[1]=0.5/mi*Dt*(n[A_X]*pn1[A_X]+n[A_Y]*pn1[A_Y]+n[A_Z]*pn1[A_Z]);
+
+					dTr[0]=2*dL[0]*(L-Ln);
+					dTr[1]=2*dL[1]*(L-Ln);
+
+					dh[0]=-0.5*Dt*Dt/mi*(n[A_X]*n[A_X]+n[A_Y]*n[A_Y]+n[A_Z]*n[A_Z]);
+					d_dhdt[0]=-0.5*Dt/mi*(n[A_X]*n[A_X]+n[A_Y]*n[A_Y]+n[A_Z]*n[A_Z]);
+					d_dhdt[1]=-0.5*Dt/mi*(n[A_X]*n[A_X]+n[A_Y]*n[A_Y]+n[A_Z]*n[A_Z]);
+
+					if(h+theta_h>0)	dTr[0]+=r*dh[0]*(h+theta_h);
+					if(dhdt+theta_dh>0)
+					{
+						dTr[0]+=r*d_dhdt[0]*(dhdt+theta_dh);
+						dTr[1]+=r*d_dhdt[1]*(dhdt+theta_dh);
+					}
+
+
+					rL[0]=0.25/mi*Dt*Dt*(n[A_X]*n[A_X]+n[A_Y]*n[A_Y]+n[A_Z]*n[A_Z]);
+					rL[1]=0.25/mi*Dt*Dt*(n[A_X]*n[A_X]+n[A_Y]*n[A_Y]+n[A_Z]*n[A_Z]);
+					rL[2]=0.25/mi*Dt*Dt*(n[A_X]*n[A_X]+n[A_Y]*n[A_Y]+n[A_Z]*n[A_Z]);
+					rL[3]=0.25/mi*Dt*Dt*(n[A_X]*n[A_X]+n[A_Y]*n[A_Y]+n[A_Z]*n[A_Z]);
+	
+					rTr[0]=2*rL[0]*(L-Ln)+2*dL[0]*dL[0];
+					rTr[1]=2*rL[1]*(L-Ln)+2*dL[0]*dL[1];
+					rTr[2]=2*rL[2]*(L-Ln)+2*dL[1]*dL[0];
+					rTr[3]=2*rL[3]*(L-Ln)+2*dL[1]*dL[1];
+					
+					if(h+theta_h>0)	rTr[0]+=r*dh[0]*dh[0];
+					else if(h+theta_h==0)	rTr[0]+=r*dh[0]*dh[0];
+					if(dhdt+theta_dh>0)
+					{
+						rTr[0]+=r*d_dhdt[0]*d_dhdt[0];
+						rTr[1]+=r*d_dhdt[0]*d_dhdt[1];
+						rTr[2]+=r*d_dhdt[1]*d_dhdt[0];
+						rTr[3]+=r*d_dhdt[1]*d_dhdt[1];
+					}
+					else if(dhdt+theta_dh==0)
+					{
+						rTr[0]+=r*d_dhdt[0]*d_dhdt[0];
+						rTr[1]+=r*d_dhdt[0]*d_dhdt[1];
+						rTr[2]+=r*d_dhdt[1]*d_dhdt[0];
+						rTr[3]+=r*d_dhdt[1]*d_dhdt[1];
+					}
+					//cout<<"pn1 "<<count_min<<", "<<count<<"="<<pn1[0]<<", "<<pn1[1]<<", "<<pn1[2]<<endl;
+					//cout<<"qn1 "<<count_min<<", "<<count<<"="<<qn1[0]<<", "<<qn1[1]<<", "<<qn1[2]<<endl;
+					//cout<<"rL"<<count_min<<", "<<count<<"="<<rL[0]<<", "<<rL[1]<<", "<<rL[2]<<", "<<rL[3]<<endl;
+					//cout<<"dL"<<count_min<<", "<<count<<"="<<dL[0]<<", "<<dL[1]<<endl;
+
+					//cout<<"rTr"<<count_min<<", "<<count<<"="<<rTr[0]<<", "<<rTr[1]<<", "<<rTr[2]<<", "<<rTr[3]<<endl;
+					//cout<<"dTr"<<count_min<<", "<<count<<"="<<dTr[0]<<", "<<dTr[1]<<endl;
+					gauss(rTr,dTr,Nx);
+					//cout<<"dTxr="<<dTxr[0]<<", "<<dTxr[1]<<", "<<dTxr[2]<<", "<<dTxr[3]<<endl;
+					lam+=-1*dTr[0];
+					mu+=-1*dTr[1];
+
+					//if(count_min%200==0&&(count==1||count%100==0))	cout<<"lam="<<lam<<", mu="<<mu<<endl;
+
+
+					E=sqrt(dTr[0]*dTr[0]+dTr[1]*dTr[1]);
+					//cout<<"gauss_dTr"<<count_min<<", "<<count<<"="<<dTr[0]<<", "<<dTr[1]<<endl<<endl;
+
+					//if(count%100==0)	cout<<"E"<<count<<"="<<E<<endl;
+					if(count>c_max)	break;
+				}
+
+				double old_E_min=E_min;
+				E_min=sqrt( (old_lam-lam)*(old_lam-lam) + (old_mu-mu)*(old_mu-mu)	);	
+				if(E_min<ep_min*1000)	r*=4;
+		
+				if(h+theta_h>0)	theta_h+=h;
+				if(dhdt+theta_dh>0)	theta_dh+=dhdt;
+	
+				//if(count_min%200==0)	cout<<"E_min"<<count_min<<"="<<E_min<<endl;
+				cout<<"E_min"<<count_min<<"="<<E_min<<endl;
+				//cout<<"h, dhdt"<<count_min<<"="<<h<<", "<<dhdt<<endl;
+				//cout<<"lam, mu"<<count_min<<"="<<lam<<", "<<mu<<endl;
+				pn1_2[A_X]=pn[A_X]-0.5*Dt*(mi*G*nG[A_X]-n[A_X]*lam);
+				pn1_2[A_Y]=pn[A_Y]-0.5*Dt*(mi*G*nG[A_Y]-n[A_Y]*lam);
+				pn1_2[A_Z]=pn[A_Z]-0.5*Dt*(mi*G*nG[A_Z]-n[A_Z]*lam);
+						
+		
+				qn1[A_X]=qn[A_X]+Dt/mi*pn1_2[A_X];
+				qn1[A_Y]=qn[A_Y]+Dt/mi*pn1_2[A_Y];
+				qn1[A_Z]=qn[A_Z]+Dt/mi*pn1_2[A_Z];
+
+				pn1[A_X]=pn[A_X]-Dt*mi*G*nG[A_X]+0.5*Dt*n[A_X]*(lam+mu);	
+				pn1[A_Y]=pn[A_Y]-Dt*mi*G*nG[A_Y]+0.5*Dt*n[A_Y]*(lam+mu);	
+				pn1[A_Z]=pn[A_Z]-Dt*mi*G*nG[A_Z]+0.5*Dt*n[A_Z]*(lam+mu);	
+
+				cout<<"pn1 "<<count_min<<"="<<pn1[0]<<", "<<pn1[1]<<", "<<pn1[2]<<endl;
+				cout<<"qn1 "<<count_min<<"="<<qn1[0]<<", "<<qn1[1]<<", "<<qn1[2]<<endl;
+
+/*				if(E_min>old_E_min)
+				{
+					dp[A_X]=old_dp[A_X];	dp[A_Y]=old_dp[A_Y];	dp[A_X]=old_dp[A_Z];
+					dq[A_X]=old_dq[A_X];	dq[A_Y]=old_dq[A_Y];	dq[A_X]=old_dq[A_Z];
+					break;
+				}*/
+				if(count_min>c_max)	break;
+			}
+
+			pn1_2[A_X]=pn[A_X]-0.5*Dt*(mi*G*nG[A_X]-n[A_X]*lam);
+			pn1_2[A_Y]=pn[A_Y]-0.5*Dt*(mi*G*nG[A_Y]-n[A_Y]*lam);
+			pn1_2[A_Z]=pn[A_Z]-0.5*Dt*(mi*G*nG[A_Z]-n[A_Z]*lam);
+						
+		
+			qn1[A_X]=qn[A_X]+Dt/mi*pn1_2[A_X];
+			qn1[A_Y]=qn[A_Y]+Dt/mi*pn1_2[A_Y];
+			qn1[A_Z]=qn[A_Z]+Dt/mi*pn1_2[A_Z];
+
+			pn1[A_X]=pn[A_X]-Dt*mi*G*nG[A_X]+0.5*Dt*n[A_X]*(lam+mu);	
+			pn1[A_Y]=pn[A_Y]-Dt*mi*G*nG[A_Y]+0.5*Dt*n[A_Y]*(lam+mu);	
+			pn1[A_Z]=pn[A_Z]-Dt*mi*G*nG[A_Z]+0.5*Dt*n[A_Z]*(lam+mu);	
+
+			pn[A_X]=pn1[A_X];	pn[A_Y]=pn1[A_Y];	pn[A_Z]=pn1[A_Z];
+			qn[A_X]=qn1[A_X];	qn[A_Y]=qn1[A_Y];	qn[A_Z]=qn1[A_Z];
+
+
+//			cout<<"dp"<<count_min<<"="<<dp[0]<<", "<<dp[1]<<", "<<dp[2]<<endl;
+//			cout<<"dq"<<count_min<<"="<<dq[0]<<", "<<dq[1]<<", "<<dq[2]<<endl;
+		
+			cout<<"pn"<<t<<"="<<pn[0]<<", "<<pn[1]<<", "<<pn[2]<<endl;
+			cout<<"qn"<<t<<"="<<qn[0]<<", "<<qn[1]<<", "<<qn[2]<<endl;
+
+			cout<<"------------------------------OK"<<endl;
+			ofstream fcmin("cmin.csv", ios::app);
+			fcmin<<t<<","<<count_min<<endl;
+			fcmin.close();
+		}
+		ofstream fp("p.csv", ios::app);
+		fp<<pn[A_X]<<","<<pn[A_Y]<<","<<pn[A_Z]<<endl;
+		fp.close();
+		ofstream fq("q.csv", ios::app);
+		fq<<qn[A_X]<<","<<qn[A_Y]<<","<<qn[A_Z]<<endl;
+		fq.close();
+		ofstream fh("h.csv", ios::app);
+		fh<<h<<endl;
+		fh.close();
+		ofstream fdh("dhdt.csv", ios::app);
+		fdh<<dhdt<<endl;
+		fdh.close();
+		ofstream fEn("Energy.csv", ios::app);
+		double En=0.5/mi*(pn[A_X]*pn[A_X]+pn[A_Y]*pn[A_Y]+pn[A_Z]*pn[A_Z])+mi*G*(qn[A_X]*nG[A_X]+qn[A_Y]*nG[A_Y]+qn[A_Z]*nG[A_Z]);
+		double error=(En-E0)/E0;
+		fEn<<En<<","<<error<<endl;
+		fEn.close();
+
+
+		double *qm=new double [DIMENSION];
+		double *pm=new double [DIMENSION];
+
+		pm[A_X]=pn[A_X];	pm[A_Y]=pn[A_Y];	pm[A_Z]=pn[A_Z];
+		qm[A_X]=qn[A_X];	qm[A_Y]=qn[A_Y];	qm[A_Z]=qn[A_Z];
+
+		PM_AVS(t_max,t,qm);
+		MM_AVS(t_max,t,Dt,mi,qm, pm);
+		
+		delete[]	qm;
+		delete[]	pm;
+
+		clock_t t1=clock();
+		ofstream t_log("time_log.csv", ios::app);
+		t_log<<t<<","<<(long double)(t1-t0)/CLOCKS_PER_SEC<<endl;
+		t_log.close();
+	}
+	
+	delete[]	dTr;
+	delete[]	rTr;
+
+	return 0;
+}
+
+
+
 int main_SEM()	
 {
 	system("mkdir E_QN");
@@ -1296,9 +1664,6 @@ int main_hy0()
 }
 
 
-
-
-
 int main_minus()	
 {
 
@@ -1884,11 +2249,6 @@ int main_minus()
 
 	return 0;
 }
-
-
-
-
-
 
 
 
@@ -3038,7 +3398,7 @@ int main_n1()
 }
 
 
-int main()//h_q()	
+int h_q()	
 {
 	system("mkdir E");
 	system("mkdir dp");
